@@ -11,24 +11,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nwcd_c/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('Home and dummy tabs are present', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
 
-    // Check for the additional tabs
-    expect(find.text('診断'), findsOneWidget);
-    expect(find.text('ダミー'), findsOneWidget);
+    expect(find.text('ホームタブ'), findsOneWidget);
+    expect(find.text('ダミータブ'), findsOneWidget);
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Home tab is selected by default, so the scan button should be visible.
+    expect(find.text('診断開始'), findsOneWidget);
   });
 }
