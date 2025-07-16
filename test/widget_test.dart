@@ -15,6 +15,10 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
 
+    // Check for the additional tabs
+    expect(find.text('診断'), findsOneWidget);
+    expect(find.text('ダミー'), findsOneWidget);
+
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);
     expect(find.text('1'), findsNothing);
