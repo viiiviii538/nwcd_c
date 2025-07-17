@@ -3,6 +3,7 @@ import platform
 import subprocess
 from dataclasses import dataclass, field
 from typing import Dict, List, Any, Optional
+import random
 
 
 @dataclass
@@ -21,6 +22,7 @@ class ScanResult:
     defender_enabled: Optional[bool] = None
     firewall_enabled: Optional[bool] = None
     os_version: str = platform.platform()
+    windows_version: str = platform.platform()
     dhcp: Optional[bool] = None
     arp_spoofing: Optional[bool] = None
     ip_conflict: Optional[bool] = None
@@ -101,6 +103,43 @@ class NetworkSecurityScanner:
             return output.strip() == "True"
         return None
 
+    # Placeholder implementations for additional metrics used by the UI
+    def scan_geoip(self) -> Dict[str, str]:
+        return {t: "JP" for t in self.targets}
+
+    def calculate_intl_traffic_ratio(self) -> float:
+        return random.random()
+
+    def calculate_http_ratio(self) -> float:
+        return random.random()
+
+    def calculate_dns_fail_rate(self) -> float:
+        return random.random() / 10
+
+    def detect_external_comm_warnings(self) -> List[str]:
+        return []
+
+    def check_ssl_status(self) -> Dict[str, str]:
+        return {t: "valid" for t in self.targets}
+
+    def check_dhcp(self) -> bool:
+        return False
+
+    def detect_arp_spoofing(self) -> bool:
+        return False
+
+    def detect_ip_conflict(self) -> bool:
+        return False
+
+    def calculate_unknown_mac_ratio(self) -> float:
+        return 0.0
+
+    def count_devices(self) -> int:
+        return len(self.targets)
+
+    def get_windows_version(self) -> str:
+        return platform.platform()
+
     def run_all(self) -> Dict[str, Any]:
         res = ScanResult()
         res.danger_ports = self.scan_danger_ports()
@@ -108,9 +147,21 @@ class NetworkSecurityScanner:
         res.netbios = self.check_netbios()
         res.smbv1 = self.check_smbv1()
         res.upnp = self.check_upnp()
+        res.geoip = self.scan_geoip()
+        res.intl_traffic_ratio = self.calculate_intl_traffic_ratio()
+        res.http_ratio = self.calculate_http_ratio()
+        res.dns_fail_rate = self.calculate_dns_fail_rate()
+        res.external_comm_warnings = self.detect_external_comm_warnings()
+        res.ssl = self.check_ssl_status()
         res.defender_enabled = self.check_defender()
         res.firewall_enabled = self.check_firewall()
         res.os_version = self.get_os_version()
+        res.windows_version = self.get_windows_version()
+        res.dhcp = self.check_dhcp()
+        res.arp_spoofing = self.detect_arp_spoofing()
+        res.ip_conflict = self.detect_ip_conflict()
+        res.unknown_mac_ratio = self.calculate_unknown_mac_ratio()
+        res.device_count = self.count_devices()
         return res.__dict__
 
 
