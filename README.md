@@ -14,3 +14,10 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## Continuous Integration
+
+This repository includes a GitHub Actions workflow located at
+`.github/workflows/analyze.yml`. The workflow installs the Flutter SDK and
+runs `flutter analyze` on each push or pull request. It also runs
+`flake8` on the Python files under `scripts/`.
