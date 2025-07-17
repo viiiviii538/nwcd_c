@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'scan_result_page.dart';
 import 'scan_service.dart';
 import 'models/scan_result.dart';
+import 'pages/dummy_tab_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -50,17 +51,31 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ホーム'),
-      ),
-      body: Center(
-        child: _scanning
-            ? const CircularProgressIndicator()
-            : ElevatedButton(
-                onPressed: _startScan,
-                child: const Text('診断開始'),
-              ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('ホーム'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: '診断'),
+              Tab(text: 'ダミータブ'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            Center(
+              child: _scanning
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _startScan,
+                      child: const Text('診断開始'),
+                    ),
+            ),
+            const DummyTabPage(),
+          ],
+        ),
       ),
     );
   }
