@@ -48,3 +48,4 @@ Some `nmap` scans need elevated permissions. On Linux and macOS run the command 
 When the user taps the **診断開始** button on the home screen, the Flutter app launches the Python script using `Process.run` from `dart:io`. The script is executed with the `--json` flag and the results are parsed to populate the widgets on the result page.
 
 Make sure that both Python and `nmap` are installed on the device where the Flutter application runs. Administrator/root privileges may be required for the script to collect all network information.
+
