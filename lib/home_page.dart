@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'scan_result_page.dart';
+import 'scan_service.dart';
+import 'models/scan_result.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,14 +17,35 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _scanning = true;
     });
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-    setState(() {
-      _scanning = false;
-    });
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ScanResultPage()),
-    );
+    try {
+      final ScanService service = ScanService();
+      final ScanResult result = await service.runScan();
+      if (!mounted) return;
+      setState(() {
+        _scanning = false;
+      });
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => ScanResultPage(result: result)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _scanning = false;
+      });
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Error'),
+          content: Text(e.toString()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
