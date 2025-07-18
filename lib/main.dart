@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
+import 'port_scanner.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp(scanner: const PortScanner()));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final PortScanner scanner;
+
+  const MyApp({super.key, required this.scanner});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +18,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const HomePage(),
+      home: HomePage(scanner: scanner),
     );
   }
 }
