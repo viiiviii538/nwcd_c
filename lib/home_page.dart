@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'port_scanner.dart';
 
 class HomePage extends StatefulWidget {
@@ -12,6 +13,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _scanning = false;
+  bool _continuousScanning = false;
+  Timer? _scanTimer;
   List<PortScanResult>? _results;
 
   Future<void> _startScan() async {
@@ -35,6 +38,33 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _startContinuousScan() {
+    if (_continuousScanning) return;
+    setState(() {
+      _continuousScanning = true;
+    });
+    _scanTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+      final ports = [21, 22, 80, 443, 445, 3389];
+      await widget.scanner.scanPorts('127.0.0.1', ports);
+      if (!mounted) return;
+      setState(() {});
+    });
+  }
+
+  void _stopContinuousScan() {
+    _scanTimer?.cancel();
+    _scanTimer = null;
+    setState(() {
+      _continuousScanning = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _scanTimer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,13 +74,33 @@ class _HomePageState extends State<HomePage> {
         child: _scanning
             ? const Center(child: CircularProgressIndicator())
             : _results == null
-                ? Center(
-                    child: ElevatedButton(
-                      onPressed: _startScan,
-                      child: const Text('診断開始'),
-                    ),
-                  )
+                ? _buildInitialButtons()
                 : _buildResults(),
+      ),
+    );
+  }
+
+  Widget _buildInitialButtons() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ElevatedButton(
+            onPressed: _startScan,
+            child: const Text('診断開始'),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed:
+                _continuousScanning ? _stopContinuousScan : _startContinuousScan,
+            child: Text(
+                _continuousScanning ? 'Stop Continuous Scan' : 'Continuous Scan'),
+          ),
+          if (_continuousScanning) ...[
+            const SizedBox(height: 16),
+            const CircularProgressIndicator(),
+          ],
+        ],
       ),
     );
   }
@@ -87,6 +137,19 @@ class _HomePageState extends State<HomePage> {
             child: const Text('再診断'),
           ),
         ),
+        const SizedBox(height: 16),
+        Center(
+          child: ElevatedButton(
+            onPressed:
+                _continuousScanning ? _stopContinuousScan : _startContinuousScan,
+            child: Text(
+                _continuousScanning ? 'Stop Continuous Scan' : 'Continuous Scan'),
+          ),
+        ),
+        if (_continuousScanning) ...[
+          const SizedBox(height: 16),
+          const Center(child: CircularProgressIndicator()),
+        ],
       ],
     );
   }
