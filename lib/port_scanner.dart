@@ -14,26 +14,36 @@ class PortScanResult {
 /// Set of ports that are considered dangerous.
 const Set<int> dangerousPorts = {3389, 445};
 
-/// Attempts to connect to each port in [ports] on [host] and returns
-/// a list of the ports that were open. Each returned item also indicates
-/// whether the port is considered dangerous.
-Future<List<PortScanResult>> scanPorts(
-  String host,
-  List<int> ports, {
-  Duration timeout = const Duration(milliseconds: 500),
-}) async {
-  final results = <PortScanResult>[];
-  for (final port in ports) {
+/// Simple port scanner utility.
+class PortScanner {
+  const PortScanner();
+
+  /// Returns `true` if a TCP connection can be established to [host]:[port].
+  Future<bool> isPortOpen(
+    String host,
+    int port, {
+    Duration timeout = const Duration(milliseconds: 500),
+  }) async {
     try {
-      final socket =
-          await Socket.connect(host, port, timeout: timeout);
+      final socket = await Socket.connect(host, port, timeout: timeout);
       socket.destroy();
-      results.add(
-        PortScanResult(port, dangerous: dangerousPorts.contains(port)),
-      );
+      return true;
     } catch (_) {
-      // Closed or unreachable port, ignore.
+      return false;
     }
   }
-  return results;
+
+  /// Scans all [ports] on [host] and returns a map of port numbers to whether
+  /// they are open.
+  Future<Map<int, bool>> scanPorts(
+    String host,
+    List<int> ports, {
+    Duration timeout = const Duration(milliseconds: 500),
+  }) async {
+    final results = <int, bool>{};
+    for (final port in ports) {
+      results[port] = await isPortOpen(host, port, timeout: timeout);
+    }
+    return results;
+  }
 }

@@ -21,7 +21,12 @@ class _HomePageState extends State<HomePage> {
     });
 
     final ports = [21, 22, 80, 443, 445, 3389];
-    final results = await scanPorts('127.0.0.1', ports);
+    final portMap = await widget.scanner.scanPorts('127.0.0.1', ports);
+    final results = portMap.entries
+        .where((e) => e.value)
+        .map((e) =>
+            PortScanResult(e.key, dangerous: dangerousPorts.contains(e.key)))
+        .toList();
 
     if (!mounted) return;
     setState(() {
