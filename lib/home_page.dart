@@ -27,26 +27,52 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = _realtimeLoading || _fullScanLoading;
     return Scaffold(
       appBar: AppBar(title: const Text('ホーム')),
       body: Center(
-        child: isLoading
-            ? const CircularProgressIndicator()
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ElevatedButton(
-                    onPressed: _startRealTimeScan,
-                    child: const Text('リアルタイム'),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton(
+                  onPressed:
+                      _realtimeLoading ? null : _startRealTimeScan,
+                  child: const Text('リアルタイム'),
+                ),
+                if (_realtimeLoading)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _startFullScan,
-                    child: const Text('フルスキャン'),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton(
+                  onPressed: _fullScanLoading ? null : _startFullScan,
+                  child: const Text('フルスキャン'),
+                ),
+                if (_fullScanLoading)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
-                ],
-              ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
