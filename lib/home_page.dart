@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'device_version_scan.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,9 +21,43 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _startFullScan() async {
     setState(() => _fullScanLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
+    final devices = await deviceVersionScan();
     if (!mounted) return;
     setState(() => _fullScanLoading = false);
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('スキャン結果'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final device in devices)
+                ListTile(
+                  title: Text(device.name),
+                  subtitle: Text(
+                    'OS: ${device.osVersion}\n'
+                    'FW: ${device.firmwareVersion}\n'
+                    'SW: ${device.softwareVersion}',
+                  ),
+                  trailing: Text(
+                    device.vulnerable ? '脆弱性あり' : '安全',
+                    style: TextStyle(
+                      color: device.vulnerable ? Colors.red : Colors.black,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
