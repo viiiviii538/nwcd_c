@@ -14,16 +14,15 @@ class PortScanResult {
 /// Set of ports that are considered dangerous.
 const Set<int> dangerousPorts = {3389, 445};
 
-/// Scanner used by the app. It can be replaced with a fake implementation
-/// in the tests.
+/// Simple port scanner utility.
 class PortScanner {
   const PortScanner();
 
-  /// Checks whether [port] on [host] accepts TCP connections.
+  /// Returns `true` if a TCP connection can be established to [host]:[port].
   Future<bool> isPortOpen(
     String host,
     int port, {
-    Duration timeout = const Duration(seconds: 1),
+    Duration timeout = const Duration(milliseconds: 500),
   }) async {
     try {
       final socket = await Socket.connect(host, port, timeout: timeout);
@@ -34,12 +33,12 @@ class PortScanner {
     }
   }
 
-  /// Scans each port in [ports] and returns a map indicating whether the port
-  /// is open or not.
+  /// Scans all [ports] on [host] and returns a map of port numbers to whether
+  /// they are open.
   Future<Map<int, bool>> scanPorts(
     String host,
     List<int> ports, {
-    Duration timeout = const Duration(seconds: 1),
+    Duration timeout = const Duration(milliseconds: 500),
   }) async {
     final results = <int, bool>{};
     for (final port in ports) {
@@ -47,18 +46,4 @@ class PortScanner {
     }
     return results;
   }
-}
-
-/// Converts the results from [PortScanner.scanPorts] into a list of
-/// [PortScanResult] objects containing additional danger information.
-List<PortScanResult> mapToScanResults(Map<int, bool> scanMap) {
-  final results = <PortScanResult>[];
-  for (final entry in scanMap.entries) {
-    if (entry.value) {
-      results.add(
-        PortScanResult(entry.key, dangerous: dangerousPorts.contains(entry.key)),
-      );
-    }
-  }
-  return results;
 }
