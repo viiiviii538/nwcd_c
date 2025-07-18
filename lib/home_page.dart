@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'full_scan_result_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -10,11 +11,15 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   bool _realtimeLoading = false;
   bool _fullScanLoading = false;
+  final List<String> _realtimeLogs = [];
+  String? _fullScanResult;
 
   Future<void> _startRealTimeScan() async {
     setState(() => _realtimeLoading = true);
+    _realtimeLogs.add('Started at ${DateTime.now()}');
     await Future.delayed(const Duration(seconds: 1));
     if (!mounted) return;
+    _realtimeLogs.add('Finished at ${DateTime.now()}');
     setState(() => _realtimeLoading = false);
   }
 
@@ -22,58 +27,79 @@ class _HomePageState extends State<HomePage> {
     setState(() => _fullScanLoading = true);
     await Future.delayed(const Duration(seconds: 1));
     if (!mounted) return;
+    _fullScanResult = 'Full scan finished at ${DateTime.now()}';
     setState(() => _fullScanLoading = false);
+    if (!mounted) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FullScanResultPage(
+          fullScanResult: _fullScanResult!,
+          realTimeLogs: _realtimeLogs,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('ホーム')),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('ホーム'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'リアルタイム'),
+              Tab(text: 'フルスキャン'),
+            ],
+          ),
+        ),
+        body: TabBarView(
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton(
-                  onPressed:
-                      _realtimeLoading ? null : _startRealTimeScan,
-                  child: const Text('リアルタイム'),
-                ),
-                if (_realtimeLoading)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8),
-                    child: SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton(
-                  onPressed: _fullScanLoading ? null : _startFullScan,
-                  child: const Text('フルスキャン'),
-                ),
-                if (_fullScanLoading)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8),
-                    child: SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-              ],
-            ),
+            _buildRealtimeTab(),
+            _buildFullScanTab(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildRealtimeTab() {
+    return Center(
+      child: _realtimeLoading
+          ? const CircularProgressIndicator()
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton(
+                  onPressed: _startRealTimeScan,
+                  child: const Text('リアルタイム開始'),
+                ),
+                const SizedBox(height: 16),
+                if (_realtimeLogs.isNotEmpty)
+                  Text(_realtimeLogs.last),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildFullScanTab() {
+    final isLoading = _fullScanLoading;
+    return Center(
+      child: isLoading
+          ? const CircularProgressIndicator()
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton(
+                  onPressed: _startFullScan,
+                  child: const Text('フルスキャン開始'),
+                ),
+                const SizedBox(height: 16),
+                if (_fullScanResult != null) Text(_fullScanResult!),
+              ],
+            ),
     );
   }
 }
