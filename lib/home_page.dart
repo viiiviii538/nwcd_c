@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'result_page.dart';
 import 'full_scan_result_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -31,8 +30,6 @@ class _HomePageState extends State<HomePage> {
     _fullScanResult = 'Full scan finished at ${DateTime.now()}';
     setState(() => _fullScanLoading = false);
     if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ResultPage()),
     await Navigator.push(
       context,
       MaterialPageRoute(
