@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'port_scanner.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final PortScanner scanner;
+
+  const HomePage({super.key, required this.scanner});
 
   @override
   State<HomePage> createState() => _HomePageState();
