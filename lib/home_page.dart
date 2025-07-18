@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'result_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,6 +24,10 @@ class _HomePageState extends State<HomePage> {
     await Future.delayed(const Duration(seconds: 1));
     if (!mounted) return;
     setState(() => _fullScanLoading = false);
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ResultPage()),
+    );
   }
 
   @override
