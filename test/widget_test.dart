@@ -5,15 +5,16 @@ import 'package:nwcd_c/main.dart';
 import 'package:nwcd_c/port_scanner.dart';
 
 void main() {
-  testWidgets('HomePage shows scan button', (WidgetTester tester) async {
-    await tester.pumpWidget(MyApp(scanner: const PortScanner()));
-
-    expect(find.text('診断開始'), findsOneWidget);
-
+  testWidgets('Scan navigates to results page', (WidgetTester tester) async {
+    await tester.pumpWidget(const MyApp());
     await tester.tap(find.text('診断開始'));
     await tester.pump();
+    // Wait for fake scan delay
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('Scan Results'), findsOneWidget);
+    expect(find.text('Port 21'), findsOneWidget);
   });
 
   testWidgets('Scan results appear after tapping button',
