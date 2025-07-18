@@ -4,14 +4,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nwcd_c/main.dart';
 
 void main() {
-  testWidgets('HomePage shows scan button', (WidgetTester tester) async {
+  testWidgets('Scan navigates to results page', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
-
-    expect(find.text('診断開始'), findsOneWidget);
 
     await tester.tap(find.text('診断開始'));
     await tester.pump();
+    // Wait for fake scan delay
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('Scan Results'), findsOneWidget);
+    expect(find.text('Port 21'), findsOneWidget);
   });
 }
