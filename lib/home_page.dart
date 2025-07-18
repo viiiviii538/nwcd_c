@@ -24,9 +24,20 @@ class _HomePageState extends State<HomePage> {
       body: Center(
         child: _scanning
             ? const CircularProgressIndicator()
-            : ElevatedButton(
-                onPressed: _startScan,
-                child: const Text('診断開始'),
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton(
+                    onPressed: _startScan,
+                    child: const Text('診断開始'),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Scan only networks you are authorized to test.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
               ),
       ),
     );
