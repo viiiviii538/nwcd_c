@@ -6,19 +6,15 @@ void main() {
   testWidgets('Real-time and full scan flows', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
 
-    // Tap the real-time scan button
-    await tester.tap(find.text('リアルタイム'));
+    // Start real-time scanning
+    await tester.tap(find.text('リアルタイム開始'));
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-    // Wait for the scan to finish
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pumpAndSettle();
-    expect(find.text('リアルタイム'), findsOneWidget);
-    expect(find.text('フルスキャン'), findsOneWidget);
-
     // Tap the full scan button
     await tester.tap(find.text('フルスキャン'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('フルスキャン開始'));
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
