@@ -41,11 +41,12 @@ class _HomePageState extends State<HomePage> {
                     onPressed: _startScan,
                     child: const Text('診断開始'),
                   ),
-                  if (_results != null)
-                    ..._results!.entries
-                        .map((e) => Text('Port ${e.key}: '
-                            '${e.value ? 'open' : 'closed'}'))
-                        .toList(),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Scan only networks you are authorized to test.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ],
               ),
       ),
