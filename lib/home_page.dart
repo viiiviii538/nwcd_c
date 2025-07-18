@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'port_scanner.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final PortScanner scanner;
+
+  const HomePage({super.key, required this.scanner});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -9,12 +12,19 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _scanning = false;
+  Map<int, bool>? _results;
 
   Future<void> _startScan() async {
-    setState(() => _scanning = true);
-    await Future.delayed(const Duration(seconds: 1));
+    setState(() {
+      _scanning = true;
+      _results = null;
+    });
+    final res = await widget.scanner.scanPorts('localhost', [80]);
     if (!mounted) return;
-    setState(() => _scanning = false);
+    setState(() {
+      _scanning = false;
+      _results = res;
+    });
   }
 
   @override
