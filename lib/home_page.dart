@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'full_scan_result_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -9,18 +10,35 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool _realtimeLoading = false;
+  bool _realtimeRunning = false;
   bool _fullScanLoading = false;
   final List<String> _realtimeLogs = [];
   String? _fullScanResult;
+  Timer? _realtimeTimer;
 
-  Future<void> _startRealTimeScan() async {
-    setState(() => _realtimeLoading = true);
-    _realtimeLogs.add('Started at ${DateTime.now()}');
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    _realtimeLogs.add('Finished at ${DateTime.now()}');
-    setState(() => _realtimeLoading = false);
+  void _startRealTimeScan() {
+    if (_realtimeRunning) return;
+    setState(() {
+      _realtimeRunning = true;
+      _realtimeLogs.add('Started at ${DateTime.now()}');
+    });
+    _realtimeTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() {
+        _realtimeLogs.add('Tick at ${DateTime.now()}');
+      });
+    });
+  }
+
+  void _stopRealTimeScan() {
+    _realtimeTimer?.cancel();
+    _realtimeTimer = null;
+    if (mounted) {
+      setState(() {
+        _realtimeRunning = false;
+        _realtimeLogs.add('Stopped at ${DateTime.now()}');
+      });
+    }
   }
 
   Future<void> _startFullScan() async {
@@ -67,20 +85,21 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildRealtimeTab() {
     return Center(
-      child: _realtimeLoading
-          ? const CircularProgressIndicator()
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton(
-                  onPressed: _startRealTimeScan,
-                  child: const Text('リアルタイム開始'),
-                ),
-                const SizedBox(height: 16),
-                if (_realtimeLogs.isNotEmpty)
-                  Text(_realtimeLogs.last),
-              ],
-            ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ElevatedButton(
+            onPressed: _realtimeRunning ? _stopRealTimeScan : _startRealTimeScan,
+            child: Text(_realtimeRunning ? 'リアルタイム停止' : 'リアルタイム開始'),
+          ),
+          const SizedBox(height: 16),
+          if (_realtimeRunning) const CircularProgressIndicator(),
+          if (_realtimeLogs.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(_realtimeLogs.last),
+          ],
+        ],
+      ),
     );
   }
 
@@ -101,5 +120,11 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
     );
+  }
+
+  @override
+  void dispose() {
+    _realtimeTimer?.cancel();
+    super.dispose();
   }
 }
