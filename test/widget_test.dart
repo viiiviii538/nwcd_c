@@ -5,7 +5,7 @@ import 'package:nwcd_c/main.dart';
 import 'package:nwcd_c/port_scanner.dart';
 
 void main() {
-  testWidgets('Scan navigates to results page', (WidgetTester tester) async {
+  testWidgets('HomePage scans and displays results', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
     await tester.tap(find.text('診断開始'));
     await tester.pump();
@@ -36,6 +36,12 @@ void main() {
     await tester.pumpWidget(MyApp(scanner: const FakePortScanner()));
     await tester.tap(find.text('診断開始'));
     await tester.pump();
-    expect(find.text('Port 80: open'), findsOneWidget);
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+
+    expect(find.textContaining('危険なポート数'), findsOneWidget);
+    expect(find.byType(ListView), findsOneWidget);
   });
 }

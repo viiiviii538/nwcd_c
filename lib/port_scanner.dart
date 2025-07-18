@@ -1,26 +1,39 @@
-import 'dart:async';
 import 'dart:io';
 
-class PortScanner {
-  const PortScanner();
+/// Result of scanning a single port.
+class PortScanResult {
+  /// The port number that was scanned.
+  final int port;
 
-  Future<bool> isPortOpen(String host, int port,
-      {Duration timeout = const Duration(seconds: 1)}) async {
+  /// Whether this port is considered dangerous.
+  final bool dangerous;
+
+  PortScanResult(this.port, {required this.dangerous});
+}
+
+/// Set of ports that are considered dangerous.
+const Set<int> dangerousPorts = {3389, 445};
+
+/// Attempts to connect to each port in [ports] on [host] and returns
+/// a list of the ports that were open. Each returned item also indicates
+/// whether the port is considered dangerous.
+Future<List<PortScanResult>> scanPorts(
+  String host,
+  List<int> ports, {
+  Duration timeout = const Duration(milliseconds: 500),
+}) async {
+  final results = <PortScanResult>[];
+  for (final port in ports) {
     try {
-      final socket = await Socket.connect(host, port, timeout: timeout);
+      final socket =
+          await Socket.connect(host, port, timeout: timeout);
       socket.destroy();
-      return true;
+      results.add(
+        PortScanResult(port, dangerous: dangerousPorts.contains(port)),
+      );
     } catch (_) {
-      return false;
+      // Closed or unreachable port, ignore.
     }
   }
-
-  Future<Map<int, bool>> scanPorts(String host, List<int> ports,
-      {Duration timeout = const Duration(seconds: 1)}) async {
-    final results = <int, bool>{};
-    for (final port in ports) {
-      results[port] = await isPortOpen(host, port, timeout: timeout);
-    }
-    return results;
-  }
+  return results;
 }

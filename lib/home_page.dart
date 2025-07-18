@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'results_page.dart';
+import 'port_scanner.dart';
 
 class HomePage extends StatefulWidget {
   final PortScanner scanner;
@@ -12,58 +12,77 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _scanning = false;
-  Map<int, bool>? _results;
+  List<PortScanResult>? _results;
 
   Future<void> _startScan() async {
     setState(() {
       _scanning = true;
       _results = null;
     });
-    final res = await widget.scanner.scanPorts('localhost', [80]);
+
+    final ports = [21, 22, 80, 443, 445, 3389];
+    final results = await scanPorts('127.0.0.1', ports);
+
     if (!mounted) return;
-    setState(() => _scanning = false);
-
-    final results = [
-      const PortInfo(21, true),
-      const PortInfo(22, false),
-      const PortInfo(23, true),
-      const PortInfo(80, true),
-      const PortInfo(443, true),
-      const PortInfo(445, false),
-    ];
-
-    if (mounted) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => ResultsPage(results: results),
-        ),
-      );
-    }
+    setState(() {
+      _scanning = false;
+      _results = results;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('ホーム')),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16),
         child: _scanning
-            ? const CircularProgressIndicator()
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ElevatedButton(
-                    onPressed: _startScan,
-                    child: const Text('診断開始'),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Scan only networks you are authorized to test.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
+            ? const Center(child: CircularProgressIndicator())
+            : _results == null
+                ? Center(
+                    child: ElevatedButton(
+                      onPressed: _startScan,
+                      child: const Text('診断開始'),
+                    ),
+                  )
+                : _buildResults(),
       ),
+    );
+  }
+
+  Widget _buildResults() {
+    final dangerousCount =
+        _results!.where((r) => r.dangerous).length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('危険なポート数: $dangerousCount'),
+        const SizedBox(height: 8),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _results!.length,
+            itemBuilder: (context, index) {
+              final result = _results![index];
+              return ListTile(
+                title: Text('Port ${result.port}'),
+                trailing: result.dangerous
+                    ? const Text(
+                        'Danger',
+                        style: TextStyle(color: Colors.red),
+                      )
+                    : null,
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        Center(
+          child: ElevatedButton(
+            onPressed: _startScan,
+            child: const Text('再診断'),
+          ),
+        ),
+      ],
     );
   }
 }
