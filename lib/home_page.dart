@@ -8,64 +8,46 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool _loading = false;
+  bool _realtimeLoading = false;
+  bool _fullScanLoading = false;
 
-  Future<void> _startScan() async {
-    setState(() => _loading = true);
+  Future<void> _startRealTimeScan() async {
+    setState(() => _realtimeLoading = true);
     await Future.delayed(const Duration(seconds: 1));
     if (!mounted) return;
-    setState(() => _loading = false);
+    setState(() => _realtimeLoading = false);
+  }
+
+  Future<void> _startFullScan() async {
+    setState(() => _fullScanLoading = true);
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+    setState(() => _fullScanLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = _realtimeLoading || _fullScanLoading;
     return Scaffold(
       appBar: AppBar(title: const Text('ホーム')),
       body: Center(
-        child: _loading
+        child: isLoading
             ? const CircularProgressIndicator()
-            : ElevatedButton(
-                      onPressed: _startScan,
-                      child: const Text('診断開始'),
-                    ),
-                  )
-                : _buildResults(),
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton(
+                    onPressed: _startRealTimeScan,
+                    child: const Text('リアルタイム'),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _startFullScan,
+                    child: const Text('フルスキャン'),
+                  ),
+                ],
+              ),
       ),
-    );
-  }
-  Widget _buildResults() {
-    final dangerousCount =
-        _results!.where((r) => r.dangerous).length;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('危険なポート数: $dangerousCount'),
-        const SizedBox(height: 8),
-        Expanded(
-          child: ListView.builder(
-            itemCount: _results!.length,
-            itemBuilder: (context, index) {
-              final result = _results![index];
-              return ListTile(
-                title: Text('Port ${result.port}'),
-                trailing: result.dangerous
-                    ? const Text(
-                        'Danger',
-                        style: TextStyle(color: Colors.red),
-                      )
-                    : null,
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-        Center(
-          child: ElevatedButton(
-            onPressed: _startScan,
-            child: const Text('再診断'),
-          ),
-        ),
-      ],
     );
   }
 }
