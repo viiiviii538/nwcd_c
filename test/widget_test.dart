@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nwcd_c/main.dart';
 
 void main() {
-  testWidgets('HomePage shows scan button', (WidgetTester tester) async {
+  testWidgets('HomePage scans and displays results', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
 
     expect(find.text('診断開始'), findsOneWidget);
@@ -13,5 +13,10 @@ void main() {
     await tester.pump();
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+
+    expect(find.textContaining('危険なポート数'), findsOneWidget);
+    expect(find.byType(ListView), findsOneWidget);
   });
 }
