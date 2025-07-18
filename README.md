@@ -32,3 +32,5 @@ The provided tests use the `flutter_test` package to verify that the scan button
 ### Platform considerations
 
 The scan requires network access. Some operating systems may block scanning without administrative rights or a wired connection. If scanning fails, try running with elevated permissions or on a direct network link.
+
+Scanning uses `dart:io` sockets, so the feature is unavailable when building for Flutter web.
