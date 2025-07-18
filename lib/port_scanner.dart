@@ -14,25 +14,50 @@ class PortScanResult {
 /// Set of ports that are considered dangerous.
 const Set<int> dangerousPorts = {3389, 445};
 
-/// Attempts to connect to each port in [ports] on [host] and returns
-/// a list of the ports that were open. Each returned item also indicates
-/// whether the port is considered dangerous.
-Future<List<PortScanResult>> scanPorts(
-  String host,
-  List<int> ports, {
-  Duration timeout = const Duration(milliseconds: 500),
-}) async {
-  final results = <PortScanResult>[];
-  for (final port in ports) {
+/// Scanner used by the app. It can be replaced with a fake implementation
+/// in the tests.
+class PortScanner {
+  const PortScanner();
+
+  /// Checks whether [port] on [host] accepts TCP connections.
+  Future<bool> isPortOpen(
+    String host,
+    int port, {
+    Duration timeout = const Duration(seconds: 1),
+  }) async {
     try {
-      final socket =
-          await Socket.connect(host, port, timeout: timeout);
+      final socket = await Socket.connect(host, port, timeout: timeout);
       socket.destroy();
-      results.add(
-        PortScanResult(port, dangerous: dangerousPorts.contains(port)),
-      );
+      return true;
     } catch (_) {
-      // Closed or unreachable port, ignore.
+      return false;
+    }
+  }
+
+  /// Scans each port in [ports] and returns a map indicating whether the port
+  /// is open or not.
+  Future<Map<int, bool>> scanPorts(
+    String host,
+    List<int> ports, {
+    Duration timeout = const Duration(seconds: 1),
+  }) async {
+    final results = <int, bool>{};
+    for (final port in ports) {
+      results[port] = await isPortOpen(host, port, timeout: timeout);
+    }
+    return results;
+  }
+}
+
+/// Converts the results from [PortScanner.scanPorts] into a list of
+/// [PortScanResult] objects containing additional danger information.
+List<PortScanResult> mapToScanResults(Map<int, bool> scanMap) {
+  final results = <PortScanResult>[];
+  for (final entry in scanMap.entries) {
+    if (entry.value) {
+      results.add(
+        PortScanResult(entry.key, dangerous: dangerousPorts.contains(entry.key)),
+      );
     }
   }
   return results;
