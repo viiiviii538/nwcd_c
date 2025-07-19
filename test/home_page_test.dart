@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nwcd_c/main.dart';
 
 void main() {
-  testWidgets('Full scan shows results in tab', (WidgetTester tester) async {
+  testWidgets('Full scan shows table results', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
 
     // Navigate to full scan tab
@@ -19,8 +19,9 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
 
-    expect(find.text('デバイス情報'), findsOneWidget);
-    expect(find.text('ポート開放状況'), findsOneWidget);
+    expect(find.byType(DataTable), findsOneWidget);
+    expect(find.text('OSアップデート未適用'), findsOneWidget);
+    expect(find.text('CVE脆弱性検出あり'), findsOneWidget);
     expect(find.text('フルスキャン開始'), findsOneWidget);
   });
 }
