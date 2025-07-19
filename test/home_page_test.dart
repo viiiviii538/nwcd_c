@@ -16,11 +16,12 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     // Wait for scan to finish and result page to appear
-    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(seconds: 4));
     await tester.pumpAndSettle();
 
     expect(find.text('デバイス情報'), findsOneWidget);
     expect(find.text('ポート開放状況'), findsOneWidget);
+    expect(find.text('脆弱性情報'), findsOneWidget);
 
     await tester.tap(find.text('完了'));
     await tester.pumpAndSettle();

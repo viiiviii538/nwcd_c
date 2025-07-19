@@ -53,12 +53,17 @@ class _HomePageState extends State<HomePage>
     setState(() => _fullScanLoading = true);
     final device = await scanDeviceVersion();
     final ports = await checkOpenPorts();
+    final cves = await scanLocalCveVulnerabilities();
     if (!mounted) return;
     setState(() => _fullScanLoading = false);
     if (!mounted) return;
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ResultPage(deviceInfo: device, portInfo: ports),
+        builder: (_) => ResultPage(
+          deviceInfo: device,
+          portInfo: ports,
+          vulnerabilityInfo: cves,
+        ),
       ),
     );
   }
