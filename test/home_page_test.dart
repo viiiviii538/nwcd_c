@@ -22,6 +22,10 @@ void main() {
     expect(find.byType(DataTable), findsOneWidget);
     expect(find.text('OSアップデート未適用'), findsOneWidget);
     expect(find.text('CVE脆弱性検出あり'), findsOneWidget);
+    // Row information should include scan results
+    expect(find.text('127.0.0.1'), findsOneWidget);
+    expect(find.text('Yes'), findsOneWidget);
+    expect(find.text('No'), findsOneWidget);
     expect(find.text('フルスキャン開始'), findsOneWidget);
   });
 }
