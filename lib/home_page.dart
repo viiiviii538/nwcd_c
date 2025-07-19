@@ -16,6 +16,7 @@ class _HomePageState extends State<HomePage>
   bool _fullScanLoading = false;
   List<DeviceInfo>? _deviceInfo;
   String? _portInfo;
+  List<DeviceInfo>? _scanResults;
   final List<String> _realtimeLogs = [];
   Timer? _realtimeTimer;
 
@@ -53,16 +54,15 @@ class _HomePageState extends State<HomePage>
   Future<void> _startFullScan() async {
     setState(() {
       _fullScanLoading = true;
-      _deviceInfo = null;
-      _portInfo = null;
+      _scanResults = null;
     });
     final device = await deviceVersionScan();
     final ports = await checkOpenPorts();
+    final results = await deviceVersionScan();
     if (!mounted) return;
     setState(() {
       _fullScanLoading = false;
-      _deviceInfo = device;
-      _portInfo = ports;
+      _scanResults = results;
     });
   }
 
@@ -147,6 +147,49 @@ class _HomePageState extends State<HomePage>
             const SizedBox(height: 8),
             Text(_portInfo!),
           ],
+          if (!isLoading && _scanResults != null)
+            Expanded(
+              child: ListView(
+                children: [
+                  _buildResultRow(
+                    'OSアップデート未適用',
+                    _scanResults!
+                        .where((d) => d.osUpdatePending)
+                        .map((d) => d.name)
+                        .toList(),
+                  ),
+                  _buildResultRow(
+                    'RDPポート開放 (3389)',
+                    _scanResults!
+                        .where((d) => d.rdpOpen)
+                        .map((d) => d.name)
+                        .toList(),
+                  ),
+                  _buildResultRow(
+                    'CVE脆弱性検出あり',
+                    _scanResults!
+                        .where((d) => d.hasCve)
+                        .map((d) => d.name)
+                        .toList(),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+      );
+  }
+
+  Widget _buildResultRow(String title, List<String> devices) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 4),
+          ...devices.map(Text.new),
+          if (devices.isEmpty) const Text('-'),
         ],
       ),
     );

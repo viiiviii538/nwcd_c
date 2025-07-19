@@ -40,6 +40,9 @@ void main() {
     expect(find.text('1.2'), findsOneWidget);
     expect(find.text('Switch'), findsOneWidget);
     expect(find.text('2.0'), findsOneWidget);
+    expect(find.text('OSアップデート未適用'), findsOneWidget);
+    expect(find.text('RDPポート開放 (3389)'), findsOneWidget);
+    expect(find.text('CVE脆弱性検出あり'), findsOneWidget);
     expect(find.text('フルスキャン開始'), findsOneWidget);
   });
 }
