@@ -59,7 +59,8 @@ class _HomePageState extends State<HomePage>
       _deviceInfo = null;
       _portInfo = null;
     });
-    final device = await scanDeviceVersion();
+    final info = await deviceVersionScan('127.0.0.1');
+    final device = info.toString();
     final ports = await checkOpenPorts();
     if (!mounted) return;
     setState(() {

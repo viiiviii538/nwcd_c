@@ -1,0 +1,10 @@
+{
+  "os": {
+    "Ubuntu": ["CVE-2021-1234"],
+    "Windows": ["CVE-2020-9999"]
+  },
+  "software": {
+    "Apache": ["CVE-2022-0001"],
+    "OpenSSH": ["CVE-2019-2034"]
+  }
+}
