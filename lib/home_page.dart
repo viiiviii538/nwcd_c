@@ -15,6 +15,9 @@ class _HomePageState extends State<HomePage>
   late final TabController _tabController;
   bool _realtimeRunning = false;
   bool _fullScanLoading = false;
+  String? _deviceInfo;
+  String? _portInfo;
+  String? _vulnerabilityInfo;
   final List<String> _realtimeLogs = [];
   Timer? _realtimeTimer;
 
@@ -50,22 +53,22 @@ class _HomePageState extends State<HomePage>
   }
 
   Future<void> _startFullScan() async {
-    setState(() => _fullScanLoading = true);
+    setState(() {
+      _fullScanLoading = true;
+      _deviceInfo = null;
+      _portInfo = null;
+      _vulnerabilityInfo = null;
+    });
     final device = await scanDeviceVersion();
     final ports = await checkOpenPorts();
     final cves = await scanLocalCveVulnerabilities();
     if (!mounted) return;
-    setState(() => _fullScanLoading = false);
-    if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ResultPage(
-          deviceInfo: device,
-          portInfo: ports,
-          vulnerabilityInfo: cves,
-        ),
-      ),
-    );
+    setState(() {
+      _fullScanLoading = false;
+      _deviceInfo = device;
+      _portInfo = ports;
+      _vulnerabilityInfo = cves;
+    });
   }
 
   @override
@@ -113,19 +116,33 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildFullScanTab() {
-    final isLoading = _fullScanLoading;
-    return Center(
-      child: isLoading
-          ? const CircularProgressIndicator()
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton(
-                  onPressed: _startFullScan,
-                  child: const Text('フルスキャン開始'),
-                ),
-              ],
-            ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ElevatedButton(
+            onPressed: _fullScanLoading ? null : _startFullScan,
+            child: const Text("フルスキャン開始"),
+          ),
+          const SizedBox(height: 16),
+          if (_fullScanLoading)
+            const Center(child: CircularProgressIndicator()),
+          if (!_fullScanLoading && _deviceInfo != null) ...[
+            Text("デバイス情報", style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text(_deviceInfo!),
+            const SizedBox(height: 16),
+            Text("ポート開放状況", style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text(_portInfo!),
+            const SizedBox(height: 16),
+            Text("脆弱性情報", style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text(_vulnerabilityInfo!),
+          ],
+        ],
+      ),
     );
   }
 

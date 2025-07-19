@@ -15,7 +15,7 @@ void main() {
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-    // Wait for scan to finish and result page to appear
+    // Wait for scan to finish and results to appear in the same tab
     await tester.pump(const Duration(seconds: 4));
     await tester.pumpAndSettle();
 
@@ -23,9 +23,7 @@ void main() {
     expect(find.text('ポート開放状況'), findsOneWidget);
     expect(find.text('脆弱性情報'), findsOneWidget);
 
-    await tester.tap(find.text('完了'));
-    await tester.pumpAndSettle();
-
+    // Button should be enabled again after results are shown
     expect(find.text('フルスキャン開始'), findsOneWidget);
   });
 }
