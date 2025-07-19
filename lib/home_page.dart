@@ -7,11 +7,13 @@ class FullScanResult {
   final String target;
   final bool osOutdated;
   final bool hasCve;
+  final String openPorts;
 
   FullScanResult({
     required this.target,
     required this.osOutdated,
     required this.hasCve,
+    required this.openPorts,
   });
 }
 
@@ -70,11 +72,12 @@ class _HomePageState extends State<HomePage>
       _fullScanResults = null;
     });
     final info = await deviceVersionScan('127.0.0.1');
-    await checkOpenPorts();
+    final portInfo = await checkOpenPorts('127.0.0.1');
     final result = FullScanResult(
       target: '127.0.0.1',
       osOutdated: info.osVersion == 'Unknown',
       hasCve: info.cveMatches.isNotEmpty,
+      openPorts: portInfo,
     );
     if (!mounted) return;
     setState(() {
@@ -165,6 +168,7 @@ class _HomePageState extends State<HomePage>
                     DataColumn(label: Text('IP/デバイス')),
                     DataColumn(label: Text('OSアップデート未適用')),
                     DataColumn(label: Text('CVE脆弱性検出あり')),
+                    DataColumn(label: Text('開放ポート')),
                   ],
                   rows: results
                       .map(
@@ -172,6 +176,7 @@ class _HomePageState extends State<HomePage>
                           DataCell(Text(r.target)),
                           DataCell(Text(r.osOutdated ? 'Yes' : 'No')),
                           DataCell(Text(r.hasCve ? 'Yes' : 'No')),
+                          DataCell(Text(r.openPorts)),
                         ]),
                       )
                       .toList(),
