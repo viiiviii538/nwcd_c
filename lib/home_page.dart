@@ -3,6 +3,18 @@ import 'package:flutter/material.dart';
 import 'scanner.dart';
 import 'network_scanner.dart';
 
+class FullScanResult {
+  final String target;
+  final bool osOutdated;
+  final bool hasCve;
+
+  FullScanResult({
+    required this.target,
+    required this.osOutdated,
+    required this.hasCve,
+  });
+}
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -15,8 +27,7 @@ class _HomePageState extends State<HomePage>
   late final TabController _tabController;
   bool _realtimeRunning = false;
   bool _fullScanLoading = false;
-  String? _deviceInfo;
-  String? _portInfo;
+  List<FullScanResult>? _fullScanResults;
   bool _networkScanLoading = false;
   List<NetworkDevice>? _networkDevices;
   final List<String> _realtimeLogs = [];
@@ -56,17 +67,19 @@ class _HomePageState extends State<HomePage>
   Future<void> _startFullScan() async {
     setState(() {
       _fullScanLoading = true;
-      _deviceInfo = null;
-      _portInfo = null;
+      _fullScanResults = null;
     });
     final info = await deviceVersionScan('127.0.0.1');
-    final device = info.toString();
-    final ports = await checkOpenPorts();
+    await checkOpenPorts();
+    final result = FullScanResult(
+      target: '127.0.0.1',
+      osOutdated: info.osVersion == 'Unknown',
+      hasCve: info.cveMatches.isNotEmpty,
+    );
     if (!mounted) return;
     setState(() {
       _fullScanLoading = false;
-      _deviceInfo = device;
-      _portInfo = ports;
+      _fullScanResults = [result];
     });
   }
 
@@ -131,6 +144,7 @@ class _HomePageState extends State<HomePage>
 
   Widget _buildFullScanTab() {
     final isLoading = _fullScanLoading;
+    final results = _fullScanResults;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -142,17 +156,28 @@ class _HomePageState extends State<HomePage>
           ),
           const SizedBox(height: 16),
           if (isLoading) const CircularProgressIndicator(),
-          if (!isLoading && _deviceInfo != null && _portInfo != null) ...[
-            Text('デバイス情報',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text(_deviceInfo!),
-            const SizedBox(height: 16),
-            Text('ポート開放状況',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text(_portInfo!),
-          ],
+          if (!isLoading && results != null)
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: DataTable(
+                  columns: const [
+                    DataColumn(label: Text('IP/デバイス')),
+                    DataColumn(label: Text('OSアップデート未適用')),
+                    DataColumn(label: Text('CVE脆弱性検出あり')),
+                  ],
+                  rows: results
+                      .map(
+                        (r) => DataRow(cells: [
+                          DataCell(Text(r.target)),
+                          DataCell(Text(r.osOutdated ? 'Yes' : 'No')),
+                          DataCell(Text(r.hasCve ? 'Yes' : 'No')),
+                        ]),
+                      )
+                      .toList(),
+                ),
+              ),
+            ),
         ],
       ),
     );
