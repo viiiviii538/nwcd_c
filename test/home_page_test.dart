@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nwcd_c/main.dart';
 
 void main() {
-  testWidgets('Full scan shows results', (WidgetTester tester) async {
+  testWidgets('Full scan shows results in tab', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
 
     // Navigate to full scan tab
@@ -15,16 +15,12 @@ void main() {
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-    // Wait for scan to finish and result page to appear
+    // Wait for scan to finish and results to display
     await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
 
     expect(find.text('デバイス情報'), findsOneWidget);
     expect(find.text('ポート開放状況'), findsOneWidget);
-
-    await tester.tap(find.text('完了'));
-    await tester.pumpAndSettle();
-
     expect(find.text('フルスキャン開始'), findsOneWidget);
   });
 }
