@@ -16,29 +16,69 @@ class NetworkDevice {
 
 Future<List<NetworkDevice>> scanNetwork() async {
   try {
-    final result = await Process.run('arp', ['-a']);
-    if (result.exitCode != 0) return [];
-    final output = result.stdout as String;
+    final subnets = await getLocalSubnets();
     final devices = <NetworkDevice>[];
-    for (final line in output.split('\n')) {
-      final match =
-          RegExp(r'([^\s]+) \(([^\)]+)\) at ([0-9a-fA-F:]{17})').firstMatch(line);
-      if (match != null) {
-        final name = match.group(1)!;
-        final ip = match.group(2)!;
-        final mac = match.group(3)!.toUpperCase();
-        devices.add(NetworkDevice(
-          ip: ip,
-          mac: mac,
-          vendor: _lookupVendor(mac),
-          name: name == '?' ? 'Unknown' : name,
-        ));
-      }
+    for (final subnet in subnets) {
+      devices.addAll(await _scanSubnetWithNmap(subnet));
     }
     return devices;
   } catch (_) {
     return [];
   }
+}
+
+Future<List<NetworkDevice>> _scanSubnetWithNmap(String subnet) async {
+  final result = await Process.run('nmap', ['-sn', subnet]);
+  if (result.exitCode != 0) return [];
+  return _parseNmapOutput(result.stdout as String);
+}
+
+List<NetworkDevice> _parseNmapOutput(String output) {
+  final devices = <NetworkDevice>[];
+  String? currentIp;
+  String currentName = 'Unknown';
+  String? mac;
+  String vendor = 'Unknown';
+
+  final hostWithName = RegExp(r'^Nmap scan report for (.+) \(([0-9.]+)\)$');
+  final hostNoName = RegExp(r'^Nmap scan report for ([0-9.]+)$');
+  final macRegex = RegExp(r'^MAC Address: ([0-9A-Fa-f:]{17})(?: \(([^)]+)\))?');
+
+  void commit() {
+    if (currentIp == null) return;
+    devices.add(NetworkDevice(
+      ip: currentIp!,
+      mac: mac ?? '',
+      vendor: vendor != 'Unknown' ? vendor : _lookupVendor(mac ?? ''),
+      name: currentName,
+    ));
+    currentIp = null;
+    mac = null;
+    vendor = 'Unknown';
+    currentName = 'Unknown';
+  }
+
+  for (final line in output.split('\\n')) {
+    final trimmed = line.trim();
+    final m1 = hostWithName.firstMatch(trimmed);
+    final m2 = hostNoName.firstMatch(trimmed);
+    if (m1 != null) {
+      commit();
+      currentName = m1.group(1)!;
+      currentIp = m1.group(2)!;
+    } else if (m2 != null) {
+      commit();
+      currentIp = m2.group(1)!;
+    } else {
+      final macMatch = macRegex.firstMatch(trimmed);
+      if (macMatch != null) {
+        mac = macMatch.group(1)!.toUpperCase();
+        vendor = macMatch.group(2) ?? 'Unknown';
+      }
+    }
+  }
+  commit();
+  return devices;
 }
 
 String _lookupVendor(String mac) {
@@ -161,4 +201,21 @@ String _hexMaskToDotted(String hex) {
     value & 0xFF,
   ];
   return bytes.join('.');
+}
+
+int _ipToInt(String ip) {
+  final parts = ip.split('.').map(int.parse).toList();
+  return (parts[0] << 24) |
+      (parts[1] << 16) |
+      (parts[2] << 8) |
+      parts[3];
+}
+
+String _intToIp(int val) {
+  return [
+    (val >> 24) & 0xFF,
+    (val >> 16) & 0xFF,
+    (val >> 8) & 0xFF,
+    val & 0xFF,
+  ].join('.');
 }
