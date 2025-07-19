@@ -11,18 +11,18 @@ void main() {
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-    // Tap the full scan button
-    await tester.tap(find.text('フルスキャン'));
+    // Switch to the full scan tab
+    await tester.tap(find.widgetWithText(Tab, 'フルスキャン'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('フルスキャン開始'));
     await tester.pump();
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-    // Wait for navigation to result page
+    // Wait for tab switch to result tab
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
 
-    // Verify result page shows a completion button
+    // Verify result tab shows a completion button
     expect(find.text('完了'), findsOneWidget);
   });
 }
