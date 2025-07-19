@@ -52,9 +52,13 @@ Future<String> checkOpenPorts() async {
 /// The returned data includes detected operating system, firmware (if any),
 /// discovered service versions and possible CVE matches from a local JSON
 /// database. If `nmap` is unavailable, placeholder values are returned.
-Future<DeviceVersionInfo> deviceVersionScan(String ip) async {
+Future<DeviceVersionInfo> deviceVersionScan(
+  String ip, {
+  Future<ProcessResult> Function(String, List<String>)? runProcess,
+}) async {
   try {
-    final result = await Process.run('nmap', ['-O', '-sV', ip]);
+    final exec = runProcess ?? Process.run;
+    final result = await exec('nmap', ['-O', '-sV', ip]);
     if (result.exitCode != 0) {
       throw ProcessException(
         'nmap',
