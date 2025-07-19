@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter/material.dart';
+import 'scanner.dart';
+import 'result_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,21 +16,12 @@ class _HomePageState extends State<HomePage>
   bool _realtimeRunning = false;
   bool _fullScanLoading = false;
   final List<String> _realtimeLogs = [];
-  String? _fullScanResult;
-  String? _summary;
   Timer? _realtimeTimer;
-
-  void _aggregate() {
-    final realtime = _realtimeLogs.join("\n");
-    _summary = "リアルタイム:\n" + realtime + "\n\nフルスキャン:\n" + _fullScanResult.toString();
-    setState(() {});
-    print(_summary);
-  }
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   void _startRealTimeScan() {
@@ -43,7 +36,6 @@ class _HomePageState extends State<HomePage>
         _realtimeLogs.add('Tick at ${DateTime.now()}');
       });
     });
-    _tabController.animateTo(1);
   }
 
   void _stopRealTimeScan() {
@@ -59,12 +51,16 @@ class _HomePageState extends State<HomePage>
 
   Future<void> _startFullScan() async {
     setState(() => _fullScanLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
+    final device = await scanDeviceVersion();
+    final ports = await checkOpenPorts();
     if (!mounted) return;
-    _fullScanResult = 'Full scan finished at ${DateTime.now()}';
     setState(() => _fullScanLoading = false);
     if (!mounted) return;
-    _tabController.animateTo(3);
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ResultPage(deviceInfo: device, portInfo: ports),
+      ),
+    );
   }
 
   @override
@@ -75,10 +71,8 @@ class _HomePageState extends State<HomePage>
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'リアルタイム'),
-            Tab(text: 'リアルタイム出力'),
+            Tab(text: 'リアルタイム診断'),
             Tab(text: 'フルスキャン'),
-            Tab(text: 'フルスキャン結果'),
           ],
         ),
       ),
@@ -86,34 +80,30 @@ class _HomePageState extends State<HomePage>
         controller: _tabController,
         children: [
           _buildRealtimeTab(),
-          _buildRealtimeOutputTab(),
           _buildFullScanTab(),
-          _buildFullScanResultTab(),
         ],
       ),
     );
   }
 
   Widget _buildRealtimeTab() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ElevatedButton(
-            onPressed: _realtimeRunning ? _stopRealTimeScan : _startRealTimeScan,
-            child: Text(_realtimeRunning ? 'リアルタイム停止' : 'リアルタイム開始'),
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: _realtimeRunning ? _stopRealTimeScan : _startRealTimeScan,
+          child: Text(_realtimeRunning ? 'リアルタイム停止' : 'リアルタイム開始'),
+        ),
+        const SizedBox(height: 16),
+        if (_realtimeRunning) const CircularProgressIndicator(),
+        const SizedBox(height: 16),
+        Expanded(
+          child: ListView.builder(
+            itemCount: _realtimeLogs.length,
+            itemBuilder: (_, index) => ListTile(title: Text(_realtimeLogs[index])),
           ),
-          const SizedBox(height: 16),
-          if (_realtimeRunning) const CircularProgressIndicator(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRealtimeOutputTab() {
-    return ListView.builder(
-      itemCount: _realtimeLogs.length,
-      itemBuilder: (_, index) => ListTile(title: Text(_realtimeLogs[index])),
+        ),
+      ],
     );
   }
 
@@ -129,33 +119,8 @@ class _HomePageState extends State<HomePage>
                   onPressed: _startFullScan,
                   child: const Text('フルスキャン開始'),
                 ),
-                const SizedBox(height: 16),
               ],
             ),
-    );
-  }
-
-  Widget _buildFullScanResultTab() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (_fullScanResult != null) Text(_fullScanResult!),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _aggregate,
-            child: const Text('完了'),
-          ),
-          const SizedBox(height: 16),
-          if (_summary != null)
-            Expanded(
-              child: SingleChildScrollView(
-                child: Text(_summary!),
-              ),
-            ),
-        ],
-      ),
     );
   }
 
