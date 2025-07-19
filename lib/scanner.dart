@@ -42,9 +42,51 @@ Future<String> scanDeviceVersion() async {
   return 'Device version: 1.0';
 }
 
-Future<String> checkOpenPorts() async {
-  await Future.delayed(const Duration(seconds: 1));
-  return 'Open ports: 80, 443';
+/// Scan [ip] for common open TCP ports.
+///
+/// The function first tries to invoke `nmap` if it is available on the system
+/// and parses the output for open ports. If `nmap` cannot be executed the
+/// function falls back to attempting socket connections to a small set of
+/// frequently used ports. The returned string lists the detected open ports or
+/// `No open ports` when none are found or the scan fails.
+Future<String> checkOpenPorts([String ip = '127.0.0.1']) async {
+  try {
+    final result = await Process.run('nmap', ['-p', '1-1024', ip]);
+    if (result.exitCode == 0) {
+      final openPorts = <int>[];
+      final lines = (result.stdout as String).split('\n');
+      final regex = RegExp(r'^(\d+)/tcp\s+open');
+      for (final line in lines) {
+        final match = regex.firstMatch(line.trim());
+        if (match != null) {
+          openPorts.add(int.parse(match.group(1)!));
+        }
+      }
+      if (openPorts.isNotEmpty) {
+        return 'Open ports: ${openPorts.join(', ')}';
+      }
+      return 'No open ports';
+    }
+  } catch (_) {
+    // Ignore and fall back to socket based scanning
+  }
+
+  const commonPorts = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3389];
+  final open = <int>[];
+  for (final port in commonPorts) {
+    try {
+      final socket = await Socket.connect(ip, port,
+          timeout: const Duration(milliseconds: 500));
+      socket.destroy();
+      open.add(port);
+    } catch (_) {
+      // closed
+    }
+  }
+  if (open.isNotEmpty) {
+    return 'Open ports: ${open.join(', ')}';
+  }
+  return 'No open ports';
 }
 
 /// Scan a device at [ip] using `nmap` to gather version information.
