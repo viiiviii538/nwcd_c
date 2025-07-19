@@ -21,7 +21,7 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   void _startRealTimeScan() {
@@ -73,6 +73,7 @@ class _HomePageState extends State<HomePage>
           tabs: const [
             Tab(text: 'リアルタイム診断'),
             Tab(text: 'フルスキャン'),
+            Tab(text: 'ネットワーク図'),
           ],
         ),
       ),
@@ -81,6 +82,7 @@ class _HomePageState extends State<HomePage>
         children: [
           _buildRealtimeTab(),
           _buildFullScanTab(),
+          _buildNetworkDiagramTab(),
         ],
       ),
     );
@@ -121,6 +123,19 @@ class _HomePageState extends State<HomePage>
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _buildNetworkDiagramTab() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Icon(Icons.network_check, size: 96),
+          SizedBox(height: 16),
+          Text('ネットワーク図がここに表示されます'),
+        ],
+      ),
     );
   }
 
