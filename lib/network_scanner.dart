@@ -16,26 +16,39 @@ class NetworkDevice {
 
 Future<List<NetworkDevice>> scanNetwork() async {
   try {
-    ProcessResult result;
-    if (Platform.isWindows) {
-      result = await Process.run('arp', ['-a']);
-    } else {
-      result = await Process.run('arp', ['-a']);
-      if (result.exitCode != 0 || (result.stdout as String).toString().trim().isEmpty) {
-        result = await Process.run('ip', ['neigh']);
+    final subnets = await getLocalSubnets();
+    final devices = <NetworkDevice>[];
+    for (final subnet in subnets) {
+      final nmapOutput = await _runNmap(subnet);
+      if (nmapOutput != null) {
+        devices.addAll(_parseNmapOutput(nmapOutput));
+      } else {
+        devices.addAll(await _pingSweep(subnet));
       }
     }
-
-    if (result.exitCode != 0) return [];
-
-    final output = result.stdout as String;
-    return _parseScanOutput(output);
+    final unique = <String, NetworkDevice>{};
+    for (final d in devices) {
+      unique[d.ip] = d;
+    }
+    return unique.values.toList();
   } catch (_) {
     return [];
   }
 }
 
-List<NetworkDevice> _parseScanOutput(String output) {
+Future<String?> _runNmap(String subnet) async {
+  try {
+    final result = await Process.run('nmap', ['-sn', subnet]);
+    if (result.exitCode == 0) {
+      return result.stdout as String;
+    }
+  } on ProcessException {
+    // ignore
+  }
+  return null;
+}
+
+List<NetworkDevice> _parseNmapOutput(String output) {
   final devices = <NetworkDevice>[];
   for (final line in output.split('\n')) {
     final device = _parseDeviceLine(line.trim());
@@ -46,54 +59,69 @@ List<NetworkDevice> _parseScanOutput(String output) {
   return devices;
 }
 
-NetworkDevice? _parseDeviceLine(String line) {
-  if (line.isEmpty) return null;
-
-  final unixMatch =
-      RegExp(r'([^\s]+) \(([^\)]+)\) at ([0-9a-fA-F:]{17})').firstMatch(line);
-  if (unixMatch != null) {
-    final name = unixMatch.group(1)!;
-    final ip = unixMatch.group(2)!;
-    final mac = unixMatch.group(3)!.toUpperCase();
-    return NetworkDevice(
-      ip: ip,
-      mac: mac,
-      vendor: _lookupVendor(mac),
-      name: name == '?' ? 'Unknown' : name,
-    );
+Future<List<NetworkDevice>> _pingSweep(String subnet) async {
+  final parts = subnet.split('/');
+  if (parts.length != 2) return [];
+  final baseIp = parts[0];
+  final prefix = int.tryParse(parts[1]!) ?? 24;
+  final start = _ipToInt(calculateNetwork(baseIp, prefix));
+  final count = 1 << (32 - prefix);
+  final tasks = <Future<void>>[];
+  for (var i = 1; i < count - 1; i++) {
+    tasks.add(_pingAddress(_intToIp(start + i)));
   }
+  await Future.wait(tasks);
+  final arpEntries = await _readArpTable();
+  return arpEntries.where((e) {
+    final ipInt = _ipToInt(e.ip);
+    return ipInt >= start && ipInt < start + count;
+  }).toList();
+}
 
-  final ipNeighMatch = RegExp(
-    r'(\d+\.\d+\.\d+\.\d+)\s+dev\s+\S+\s+lladdr\s+([0-9a-fA-F:]{17})',
-  ).firstMatch(line);
-  if (ipNeighMatch != null) {
-    final ip = ipNeighMatch.group(1)!;
-    final mac = ipNeighMatch.group(2)!.toUpperCase();
-    return NetworkDevice(
-      ip: ip,
-      mac: mac,
-      vendor: _lookupVendor(mac),
-      name: 'Unknown',
-    );
+Future<void> _pingAddress(String ip) async {
+  try {
+    if (Platform.isWindows) {
+      await Process.run('ping', ['-n', '1', '-w', '1000', ip]);
+    } else {
+      await Process.run('ping', ['-c', '1', '-W', '1', ip]);
+    }
+  } catch (_) {}
+}
+
+Future<List<NetworkDevice>> _readArpTable() async {
+  final result = await Process.run('arp', ['-a']);
+  if (result.exitCode != 0) return [];
+  final output = result.stdout as String;
+  final devices = <NetworkDevice>[];
+  final unix = RegExp(r'([^\s]+) \(([^)]+)\) at ([0-9A-Fa-f:]{17})');
+  final windows = RegExp(r'\s*([0-9.]+)\s+([0-9A-Fa-f:-]{17})\s');
+  for (final line in output.split('\n')) {
+    var m = unix.firstMatch(line);
+    if (m != null) {
+      final name = m.group(1)!;
+      final ip = m.group(2)!;
+      final mac = m.group(3)!.toUpperCase();
+      devices.add(NetworkDevice(
+        ip: ip,
+        mac: mac,
+        vendor: _lookupVendor(mac),
+        name: name == '?' ? 'Unknown' : name,
+      ));
+      continue;
+    }
+    m = windows.firstMatch(line);
+    if (m != null) {
+      final ip = m.group(1)!;
+      final mac = m.group(2)!.replaceAll('-', ':').toUpperCase();
+      devices.add(NetworkDevice(
+        ip: ip,
+        mac: mac,
+        vendor: _lookupVendor(mac),
+        name: 'Unknown',
+      ));
+    }
   }
-
-  final winMatch = RegExp(
-    r'(\d+\.\d+\.\d+\.\d+)\s+([0-9a-fA-F-]{17})',
-  ).firstMatch(line);
-  if (winMatch != null) {
-    final ip = winMatch.group(1)!;
-    final mac = winMatch.group(2)!
-        .replaceAll('-', ':')
-        .toUpperCase();
-    return NetworkDevice(
-      ip: ip,
-      mac: mac,
-      vendor: _lookupVendor(mac),
-      name: 'Unknown',
-    );
-  }
-
-  return null;
+  return devices;
 }
 
 String _lookupVendor(String mac) {
