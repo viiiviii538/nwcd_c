@@ -1,45 +1,51 @@
 class DeviceInfo {
+  final String ip;
   final String name;
   final String osVersion;
-  final String firmwareVersion;
-  final String softwareVersion;
-  final bool vulnerable;
+  final bool osUpdatePending;
+  final bool rdpPortOpen;
+  final bool cveVulnerable;
 
   const DeviceInfo({
+    required this.ip,
     required this.name,
     required this.osVersion,
-    required this.firmwareVersion,
-    required this.softwareVersion,
-    required this.vulnerable,
+    required this.osUpdatePending,
+    required this.rdpPortOpen,
+    required this.cveVulnerable,
   });
 }
 
 Future<List<DeviceInfo>> deviceVersionScan() async {
-  // In a real implementation this function would scan the network and
-  // query each device for its firmware and software versions. For this
-  // example we just return a simulated list of devices.
+  // NOTE: In a production environment this function would scan the local
+  // network, query devices for version information and check them against
+  // known vulnerability databases. This demo returns fixed values so that the
+  // UI can display an example result without performing real network access.
   await Future.delayed(const Duration(seconds: 1));
   return const [
     DeviceInfo(
-      name: 'Router',
-      osVersion: '1.0.0',
-      firmwareVersion: '2.0.0',
-      softwareVersion: '3.0.0',
-      vulnerable: false,
+      ip: '192.168.0.2',
+      name: 'PC-A',
+      osVersion: 'Windows 10 20H2',
+      osUpdatePending: false,
+      rdpPortOpen: true,
+      cveVulnerable: false,
     ),
     DeviceInfo(
-      name: 'Camera',
-      osVersion: '5.0.1',
-      firmwareVersion: '1.2.3',
-      softwareVersion: '4.5.6',
-      vulnerable: true,
+      ip: '192.168.0.7',
+      name: 'PC-B',
+      osVersion: 'Windows 8',
+      osUpdatePending: true,
+      rdpPortOpen: false,
+      cveVulnerable: false,
     ),
     DeviceInfo(
-      name: 'NAS',
-      osVersion: '2.5.0',
-      firmwareVersion: '2.5.0',
-      softwareVersion: '2.5.0',
-      vulnerable: false,
+      ip: '192.168.0.9',
+      name: 'IoT-Camera',
+      osVersion: '1.3.0',
+      osUpdatePending: false,
+      rdpPortOpen: false,
+      cveVulnerable: true,
     ),
   ];
 }

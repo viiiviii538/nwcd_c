@@ -24,29 +24,37 @@ class _HomePageState extends State<HomePage> {
     final devices = await deviceVersionScan();
     if (!mounted) return;
     setState(() => _fullScanLoading = false);
+
+    String formatDevices(Iterable<DeviceInfo> info) =>
+        info.map((d) => '${d.ip} (${d.name})').join(', ');
+
+    final osPending = formatDevices(devices.where((d) => d.osUpdatePending));
+    final rdpOpen = formatDevices(devices.where((d) => d.rdpPortOpen));
+    final cveVuln = formatDevices(devices.where((d) => d.cveVulnerable));
+
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('スキャン結果'),
         content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final device in devices)
-                ListTile(
-                  title: Text(device.name),
-                  subtitle: Text(
-                    'OS: ${device.osVersion}\n'
-                    'FW: ${device.firmwareVersion}\n'
-                    'SW: ${device.softwareVersion}',
-                  ),
-                  trailing: Text(
-                    device.vulnerable ? '脆弱性あり' : '安全',
-                    style: TextStyle(
-                      color: device.vulnerable ? Colors.red : Colors.black,
-                    ),
-                  ),
-                ),
+          child: DataTable(
+            columns: const [
+              DataColumn(label: Text('スキャン項目')),
+              DataColumn(label: Text('リスクのある端末一覧')),
+            ],
+            rows: [
+              DataRow(cells: [
+                const DataCell(Text('OSアップデート未適用')),
+                DataCell(Text(osPending.isNotEmpty ? osPending : '-')),
+              ]),
+              DataRow(cells: [
+                const DataCell(Text('RDPポート開放 (3389)')),
+                DataCell(Text(rdpOpen.isNotEmpty ? rdpOpen : '-')),
+              ]),
+              DataRow(cells: [
+                const DataCell(Text('CVE脆弱性検出あり')),
+                DataCell(Text(cveVuln.isNotEmpty ? cveVuln : '-')),
+              ]),
             ],
           ),
         ),
