@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class ResultPage extends StatelessWidget {
   final String deviceInfo;
   final String portInfo;
+  final String vulnerabilityInfo;
 
   const ResultPage({
     super.key,
     required this.deviceInfo,
     required this.portInfo,
+    required this.vulnerabilityInfo,
   });
 
   @override
@@ -26,6 +28,10 @@ class ResultPage extends StatelessWidget {
             Text('ポート開放状況', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(portInfo),
+            const SizedBox(height: 16),
+            Text('脆弱性情報', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text(vulnerabilityInfo),
             const Spacer(),
             Center(
               child: ElevatedButton(
