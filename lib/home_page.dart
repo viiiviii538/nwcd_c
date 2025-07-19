@@ -14,7 +14,7 @@ class _HomePageState extends State<HomePage>
   late final TabController _tabController;
   bool _realtimeRunning = false;
   bool _fullScanLoading = false;
-  String? _deviceInfo;
+  List<DeviceInfo>? _deviceInfo;
   String? _portInfo;
   final List<String> _realtimeLogs = [];
   Timer? _realtimeTimer;
@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage>
       _deviceInfo = null;
       _portInfo = null;
     });
-    final device = await scanDeviceVersion();
+    final device = await deviceVersionScan();
     final ports = await checkOpenPorts();
     if (!mounted) return;
     setState(() {
@@ -129,7 +129,18 @@ class _HomePageState extends State<HomePage>
             Text('デバイス情報',
                 style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
-            Text(_deviceInfo!),
+            DataTable(
+              columns: const [
+                DataColumn(label: Text('名前')),
+                DataColumn(label: Text('バージョン')),
+              ],
+              rows: _deviceInfo!
+                  .map((d) => DataRow(cells: [
+                        DataCell(Text(d.name)),
+                        DataCell(Text(d.version)),
+                      ]))
+                  .toList(),
+            ),
             const SizedBox(height: 16),
             Text('ポート開放状況',
                 style: Theme.of(context).textTheme.titleMedium),

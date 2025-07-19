@@ -1,8 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nwcd_c/main.dart';
+import 'package:nwcd_c/scanner.dart';
 
 void main() {
+  late DeviceVersionScanner originalScanner;
+
+  setUp(() {
+    originalScanner = deviceVersionScan;
+    deviceVersionScan = () async => [
+          DeviceInfo(name: 'Router', version: '1.2'),
+          DeviceInfo(name: 'Switch', version: '2.0'),
+        ];
+  });
+
+  tearDown(() {
+    deviceVersionScan = originalScanner;
+  });
+
   testWidgets('Full scan shows results in tab', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
 
@@ -21,6 +36,10 @@ void main() {
 
     expect(find.text('デバイス情報'), findsOneWidget);
     expect(find.text('ポート開放状況'), findsOneWidget);
+    expect(find.text('Router'), findsOneWidget);
+    expect(find.text('1.2'), findsOneWidget);
+    expect(find.text('Switch'), findsOneWidget);
+    expect(find.text('2.0'), findsOneWidget);
     expect(find.text('フルスキャン開始'), findsOneWidget);
   });
 }
