@@ -19,18 +19,33 @@ Future<List<NetworkDevice>> scanNetwork() async {
     final subnets = await getLocalSubnets();
     final devices = <NetworkDevice>[];
     for (final subnet in subnets) {
-      devices.addAll(await _scanSubnetWithNmap(subnet));
+      final nmapOutput = await _runNmap(subnet);
+      if (nmapOutput != null) {
+        devices.addAll(_parseNmapOutput(nmapOutput));
+      } else {
+        devices.addAll(await _pingSweep(subnet));
+      }
     }
-    return devices;
+    final unique = <String, NetworkDevice>{};
+    for (final d in devices) {
+      unique[d.ip] = d;
+    }
+    return unique.values.toList();
   } catch (_) {
     return [];
   }
 }
 
-Future<List<NetworkDevice>> _scanSubnetWithNmap(String subnet) async {
-  final result = await Process.run('nmap', ['-sn', subnet]);
-  if (result.exitCode != 0) return [];
-  return _parseNmapOutput(result.stdout as String);
+Future<String?> _runNmap(String subnet) async {
+  try {
+    final result = await Process.run('nmap', ['-sn', subnet]);
+    if (result.exitCode == 0) {
+      return result.stdout as String;
+    }
+  } on ProcessException {
+    // ignore
+  }
+  return null;
 }
 
 List<NetworkDevice> _parseNmapOutput(String output) {
@@ -78,6 +93,71 @@ List<NetworkDevice> _parseNmapOutput(String output) {
     }
   }
   commit();
+  return devices;
+}
+
+Future<List<NetworkDevice>> _pingSweep(String subnet) async {
+  final parts = subnet.split('/');
+  if (parts.length != 2) return [];
+  final baseIp = parts[0];
+  final prefix = int.tryParse(parts[1]!) ?? 24;
+  final start = _ipToInt(calculateNetwork(baseIp, prefix));
+  final count = 1 << (32 - prefix);
+  final tasks = <Future<void>>[];
+  for (var i = 1; i < count - 1; i++) {
+    tasks.add(_pingAddress(_intToIp(start + i)));
+  }
+  await Future.wait(tasks);
+  final arpEntries = await _readArpTable();
+  return arpEntries.where((e) {
+    final ipInt = _ipToInt(e.ip);
+    return ipInt >= start && ipInt < start + count;
+  }).toList();
+}
+
+Future<void> _pingAddress(String ip) async {
+  try {
+    if (Platform.isWindows) {
+      await Process.run('ping', ['-n', '1', '-w', '1000', ip]);
+    } else {
+      await Process.run('ping', ['-c', '1', '-W', '1', ip]);
+    }
+  } catch (_) {}
+}
+
+Future<List<NetworkDevice>> _readArpTable() async {
+  final result = await Process.run('arp', ['-a']);
+  if (result.exitCode != 0) return [];
+  final output = result.stdout as String;
+  final devices = <NetworkDevice>[];
+  final unix = RegExp(r'([^\s]+) \(([^)]+)\) at ([0-9A-Fa-f:]{17})');
+  final windows = RegExp(r'\s*([0-9.]+)\s+([0-9A-Fa-f:-]{17})\s');
+  for (final line in output.split('\n')) {
+    var m = unix.firstMatch(line);
+    if (m != null) {
+      final name = m.group(1)!;
+      final ip = m.group(2)!;
+      final mac = m.group(3)!.toUpperCase();
+      devices.add(NetworkDevice(
+        ip: ip,
+        mac: mac,
+        vendor: _lookupVendor(mac),
+        name: name == '?' ? 'Unknown' : name,
+      ));
+      continue;
+    }
+    m = windows.firstMatch(line);
+    if (m != null) {
+      final ip = m.group(1)!;
+      final mac = m.group(2)!.replaceAll('-', ':').toUpperCase();
+      devices.add(NetworkDevice(
+        ip: ip,
+        mac: mac,
+        vendor: _lookupVendor(mac),
+        name: 'Unknown',
+      ));
+    }
+  }
   return devices;
 }
 
