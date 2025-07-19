@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'device_version_scan.dart';
+import 'port_scan.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,32 +21,45 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _startFullScan() async {
     setState(() => _fullScanLoading = true);
-    final devices = await deviceVersionScan();
+    final results = await portScan();
     if (!mounted) return;
     setState(() => _fullScanLoading = false);
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('スキャン結果'),
+        title: const Text('ポート開放チェック結果'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              for (final device in devices)
-                ListTile(
-                  title: Text(device.name),
-                  subtitle: Text(
-                    'OS: ${device.osVersion}\n'
-                    'FW: ${device.firmwareVersion}\n'
-                    'SW: ${device.softwareVersion}',
-                  ),
-                  trailing: Text(
-                    device.vulnerable ? '脆弱性あり' : '安全',
-                    style: TextStyle(
-                      color: device.vulnerable ? Colors.red : Colors.black,
-                    ),
+              for (final result in results) ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('ポート：${result.port}'),
+                      Text('リスク：${result.risk}'),
+                    ],
                   ),
                 ),
+                DataTable(
+                  columns: const [
+                    DataColumn(label: Text('IPアドレス')),
+                    DataColumn(label: Text('ホスト名')),
+                    DataColumn(label: Text('コメント')),
+                  ],
+                  rows: [
+                    for (final entry in result.entries)
+                      DataRow(cells: [
+                        DataCell(Text(entry.ipAddress)),
+                        DataCell(Text(entry.hostName)),
+                        DataCell(Text(entry.comment)),
+                      ]),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
             ],
           ),
         ),
