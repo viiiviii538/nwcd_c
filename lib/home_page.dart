@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'scanner.dart';
+import 'network_scanner.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,6 +17,8 @@ class _HomePageState extends State<HomePage>
   bool _fullScanLoading = false;
   String? _deviceInfo;
   String? _portInfo;
+  bool _networkScanLoading = false;
+  List<NetworkDevice>? _networkDevices;
   final List<String> _realtimeLogs = [];
   Timer? _realtimeTimer;
 
@@ -63,6 +66,19 @@ class _HomePageState extends State<HomePage>
       _fullScanLoading = false;
       _deviceInfo = device;
       _portInfo = ports;
+    });
+  }
+
+  Future<void> _startNetworkScan() async {
+    setState(() {
+      _networkScanLoading = true;
+      _networkDevices = null;
+    });
+    final devices = await scanNetwork();
+    if (!mounted) return;
+    setState(() {
+      _networkScanLoading = false;
+      _networkDevices = devices;
     });
   }
 
@@ -142,13 +158,42 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget _buildNetworkDiagramTab() {
-    return Center(
+    final devices = _networkDevices;
+    final isLoading = _networkScanLoading;
+    return Padding(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(Icons.network_check, size: 96),
-          SizedBox(height: 16),
-          Text('ネットワーク図がここに表示されます'),
+        children: [
+          ElevatedButton(
+            onPressed: isLoading ? null : _startNetworkScan,
+            child: const Text('ネットワークスキャン開始'),
+          ),
+          const SizedBox(height: 16),
+          if (isLoading) const CircularProgressIndicator(),
+          if (!isLoading && devices != null)
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: DataTable(
+                  columns: const [
+                    DataColumn(label: Text('IPアドレス')),
+                    DataColumn(label: Text('MACアドレス')),
+                    DataColumn(label: Text('ベンダー名')),
+                    DataColumn(label: Text('機器名')),
+                  ],
+                  rows: devices
+                      .map(
+                        (d) => DataRow(cells: [
+                          DataCell(Text(d.ip)),
+                          DataCell(Text(d.mac)),
+                          DataCell(Text(d.vendor)),
+                          DataCell(Text(d.name)),
+                        ]),
+                      )
+                      .toList(),
+                ),
+              ),
+            ),
         ],
       ),
     );
