@@ -19,8 +19,9 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
 
-    expect(find.text('デバイス情報'), findsOneWidget);
-    expect(find.text('ポート開放状況'), findsOneWidget);
+    expect(find.text('OSアップデート未適用'), findsOneWidget);
+    expect(find.text('RDPポート開放 (3389)'), findsOneWidget);
+    expect(find.text('CVE脆弱性検出あり'), findsOneWidget);
     expect(find.text('フルスキャン開始'), findsOneWidget);
   });
 }
