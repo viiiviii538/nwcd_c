@@ -268,3 +268,36 @@ String _intToIp(int val) {
     val & 0xFF,
   ].join('.');
 }
+
+class NetworkTopology {
+  final String gateway;
+  final List<NetworkDevice> devices;
+
+  NetworkTopology({required this.gateway, required this.devices});
+}
+
+Future<NetworkTopology> scanNetworkTopology() async {
+  final devices = await scanNetwork();
+  final gateway = await getDefaultGateway() ?? 'Gateway';
+  return NetworkTopology(gateway: gateway, devices: devices);
+}
+
+Future<String?> getDefaultGateway() async {
+  try {
+    if (Platform.isWindows) {
+      final result = await Process.run('ipconfig', []);
+      if (result.exitCode != 0) return null;
+      final match = RegExp(r'Default Gateway[^:]*: ([0-9.]+)')
+          .firstMatch(result.stdout as String);
+      return match?.group(1);
+    } else {
+      final result = await Process.run('ip', ['route']);
+      if (result.exitCode != 0) return null;
+      final match =
+          RegExp(r'default via ([0-9.]+)').firstMatch(result.stdout as String);
+      return match?.group(1);
+    }
+  } catch (_) {
+    return null;
+  }
+}

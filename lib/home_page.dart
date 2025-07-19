@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'scanner.dart';
 import 'network_scanner.dart';
+import 'package:graphview/GraphView.dart';
 
 class FullScanResult {
   final String target;
@@ -30,6 +31,7 @@ class _HomePageState extends State<HomePage>
   List<FullScanResult>? _fullScanResults;
   bool _networkScanLoading = false;
   List<NetworkDevice>? _networkDevices;
+  String? _gatewayIp;
   final List<String> _realtimeLogs = [];
   Timer? _realtimeTimer;
 
@@ -87,12 +89,14 @@ class _HomePageState extends State<HomePage>
     setState(() {
       _networkScanLoading = true;
       _networkDevices = null;
+      _gatewayIp = null;
     });
-    final devices = await scanNetwork();
+    final topo = await scanNetworkTopology();
     if (!mounted) return;
     setState(() {
       _networkScanLoading = false;
-      _networkDevices = devices;
+      _networkDevices = topo.devices;
+      _gatewayIp = topo.gateway;
     });
   }
 
@@ -185,6 +189,7 @@ class _HomePageState extends State<HomePage>
 
   Widget _buildNetworkDiagramTab() {
     final devices = _networkDevices;
+    final gateway = _gatewayIp ?? 'Gateway';
     final isLoading = _networkScanLoading;
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -196,7 +201,9 @@ class _HomePageState extends State<HomePage>
           ),
           const SizedBox(height: 16),
           if (isLoading) const CircularProgressIndicator(),
-          if (!isLoading && devices != null)
+          if (!isLoading && devices != null) ...[
+            Expanded(child: _buildNetworkGraph(devices, gateway)),
+            const SizedBox(height: 16),
             Expanded(
               child: SingleChildScrollView(
                 scrollDirection: Axis.vertical,
@@ -220,8 +227,38 @@ class _HomePageState extends State<HomePage>
                 ),
               ),
             ),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _buildNetworkGraph(List<NetworkDevice> devices, String gateway) {
+    final graph = Graph()..isTree = true;
+    final root = Node.Id(gateway);
+    graph.addNode(root);
+    for (final d in devices) {
+      final node = Node.Id(d.ip);
+      graph.addEdge(root, node);
+    }
+    final builder = SugiyamaAlgorithm(SugiyamaConfiguration());
+    return GraphView(
+      graph: graph,
+      algorithm: builder,
+      builder: (Node node) {
+        final label = node.key!.value as String;
+        return Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.blue[100],
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+          ),
+        );
+      },
     );
   }
 
