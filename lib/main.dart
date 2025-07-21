@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
+import 'network_scanner.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Future<List<NetworkDevice>> Function()? networkScanFn;
+
+  const MyApp({super.key, this.networkScanFn});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +18,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const HomePage(),
+      home: HomePage(scanNetworkFn: networkScanFn),
     );
   }
 }

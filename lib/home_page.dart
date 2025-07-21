@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'scanner.dart';
 import 'network_scanner.dart';
+import 'network_diagram.dart';
 
 class FullScanResult {
   final String target;
@@ -18,7 +19,9 @@ class FullScanResult {
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final Future<List<NetworkDevice>> Function()? scanNetworkFn;
+
+  const HomePage({super.key, this.scanNetworkFn});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -91,7 +94,8 @@ class _HomePageState extends State<HomePage>
       _networkScanLoading = true;
       _networkDevices = null;
     });
-    final devices = await scanNetwork();
+    final scan = widget.scanNetworkFn ?? scanNetwork;
+    final devices = await scan();
     if (!mounted) return;
     setState(() {
       _networkScanLoading = false;
@@ -203,27 +207,7 @@ class _HomePageState extends State<HomePage>
           if (isLoading) const CircularProgressIndicator(),
           if (!isLoading && devices != null)
             Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: DataTable(
-                  columns: const [
-                    DataColumn(label: Text('IPアドレス')),
-                    DataColumn(label: Text('MACアドレス')),
-                    DataColumn(label: Text('ベンダー名')),
-                    DataColumn(label: Text('機器名')),
-                  ],
-                  rows: devices
-                      .map(
-                        (d) => DataRow(cells: [
-                          DataCell(Text(d.ip)),
-                          DataCell(Text(d.mac)),
-                          DataCell(Text(d.vendor)),
-                          DataCell(Text(d.name)),
-                        ]),
-                      )
-                      .toList(),
-                ),
-              ),
+              child: NetworkDiagram(devices: devices),
             ),
         ],
       ),
