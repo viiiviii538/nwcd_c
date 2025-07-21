@@ -20,7 +20,7 @@ class NetworkDiagram extends StatelessWidget {
       graph.addEdge(root, node);
     }
 
-    final builder = BuchheimWalkerConfiguration()
+    final layout = BuchheimWalkerConfiguration()
       ..siblingSeparation = 20
       ..levelSeparation = 30
       ..subtreeSeparation = 30
@@ -32,7 +32,16 @@ class NetworkDiagram extends StatelessWidget {
       maxScale: 5,
       child: GraphView(
         graph: graph,
-        algorithm: BuchheimWalkerAlgorithm(builder, TreeEdgeRenderer(builder)),
+        algorithm: BuchheimWalkerAlgorithm(layout, TreeEdgeRenderer(layout)),
+        builder: (Node node) {
+          final id = node.key?.value ?? '';
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text('$id'),
+            ),
+          );
+        },
       ),
     );
   }
