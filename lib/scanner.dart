@@ -2,6 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+/// Signature for a function that runs a process and returns the result.
+typedef ProcessRunner = Future<ProcessResult> Function(
+    String executable, List<String> arguments);
+
 /// Basic device version information discovered during scans.
 class DeviceVersionInfo {
   final String osVersion;
@@ -96,7 +100,7 @@ Future<String> checkOpenPorts([String ip = '127.0.0.1']) async {
 /// database. If `nmap` is unavailable, placeholder values are returned.
 Future<DeviceVersionInfo> deviceVersionScan(
   String ip, {
-  Future<ProcessResult> Function(String, List<String>)? runProcess,
+  ProcessRunner? runProcess,
 }) async {
   try {
     final exec = runProcess ?? Process.run;
