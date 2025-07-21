@@ -50,12 +50,50 @@ Future<String?> _runNmap(String subnet) async {
 
 List<NetworkDevice> _parseNmapOutput(String output) {
   final devices = <NetworkDevice>[];
+  String? currentIp;
+  String currentName = 'Unknown';
+  String? mac;
+  String vendor = 'Unknown';
+
+  final hostWithName = RegExp(r'^Nmap scan report for (.+) \(([0-9.]+)\)\$');
+  final hostNoName = RegExp(r'^Nmap scan report for ([0-9.]+)\$');
+  final macRegex =
+      RegExp(r'^MAC Address: ([0-9A-Fa-f:]{17})(?: \(([^)]+)\))?');
+
+  void commit() {
+    if (currentIp == null) return;
+    devices.add(NetworkDevice(
+      ip: currentIp!,
+      mac: mac ?? '',
+      vendor: vendor != 'Unknown' ? vendor : _lookupVendor(mac ?? ''),
+      name: currentName,
+    ));
+    currentIp = null;
+    mac = null;
+    vendor = 'Unknown';
+    currentName = 'Unknown';
+  }
+
   for (final line in output.split('\n')) {
-    final device = _parseDeviceLine(line.trim());
-    if (device != null) {
-      devices.add(device);
+    final trimmed = line.trim();
+    final m1 = hostWithName.firstMatch(trimmed);
+    final m2 = hostNoName.firstMatch(trimmed);
+    if (m1 != null) {
+      commit();
+      currentName = m1.group(1)!;
+      currentIp = m1.group(2)!;
+    } else if (m2 != null) {
+      commit();
+      currentIp = m2.group(1)!;
+    } else {
+      final macMatch = macRegex.firstMatch(trimmed);
+      if (macMatch != null) {
+        mac = macMatch.group(1)!.toUpperCase();
+        vendor = macMatch.group(2) ?? 'Unknown';
+      }
     }
   }
+  commit();
   return devices;
 }
 
