@@ -32,7 +32,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for additional details.
 
 ### Network diagram
 1. Tap **ネットワーク図** on the home screen.
-2. A placeholder diagram is displayed showing where network visuals will appear.
+2. After the scan finishes a simple graph of detected devices is shown.
 
 **Note:** Only run network scans against systems you are authorized to test.
 Unauthorized scanning can be illegal or violate terms of service.
