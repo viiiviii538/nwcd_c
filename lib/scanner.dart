@@ -120,7 +120,7 @@ Future<DeviceVersionInfo> deviceVersionScan(
 
     final softwareVersions = <String>[];
     for (final line in LineSplitter.split(output)) {
-      final match = RegExp(r'^\\d+/\\w+\\s+open\\s+[^\\s]+\\s+(.+)\\$').firstMatch(line.trim());
+      final match = RegExp(r'^\d+/\w+\s+open\s+[^\s]+\s+(.+)$').firstMatch(line.trim());
       if (match != null) {
         softwareVersions.add(match.group(1)!.trim());
       }
