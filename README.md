@@ -7,6 +7,17 @@ Pressing either scan button shows a short progress indicator. Once the
 actual scanning logic is implemented, each workflow will navigate to a results
 page summarizing the findings.
 
+## Setup
+
+This project targets **Flutter 3.29.2** with **Dart 3.7.2**. After installing
+Flutter, fetch dependencies with:
+
+```bash
+flutter pub get
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for additional details.
+
 ## Workflows
 
 ### Real-time scan
