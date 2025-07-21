@@ -22,4 +22,13 @@ void main() {
     await server.close();
     expect(result, 'Open ports: ${server.port}');
   });
+  test('returns failure message when scan cannot be performed', () async {
+    final result = await checkOpenPorts(
+      '127.0.0.1',
+      runProcess: (_, __) async => throw ProcessException('nmap', []),
+      socketConnect: (_, __, {timeout}) async => throw SocketException('fail'),
+    );
+    expect(result, 'Scan failed');
+  });
+
 }

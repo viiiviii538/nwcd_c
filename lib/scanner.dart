@@ -55,11 +55,14 @@ Future<String> checkOpenPorts([
   Future<Socket> Function(String, int, {Duration? timeout})? socketConnect,
   List<int>? ports,
 }]) async {
+  final openPorts = <int>[];
+  bool success = false;
+
   try {
     final exec = runProcess ?? Process.run;
     final result = await exec('nmap', ['-p', '1-1024', ip]);
     if (result.exitCode == 0) {
-      final openPorts = <int>[];
+      success = true;
       final lines = (result.stdout as String).split('\n');
       final regex = RegExp(r'^(\d+)/tcp\s+open');
       for (final line in lines) {
@@ -68,31 +71,37 @@ Future<String> checkOpenPorts([
           openPorts.add(int.parse(match.group(1)!));
         }
       }
-      if (openPorts.isNotEmpty) {
-        return 'Open ports: ${openPorts.join(', ')}';
-      }
-      return 'No open ports';
     }
   } catch (_) {
     // Ignore and fall back to socket based scanning
   }
 
-  final portList = ports ??
-      const [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3389];
-  final open = <int>[];
-  for (final port in portList) {
+  if (!success) {
+    final portList = ports ??
+        const [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3389];
     try {
-      final connect = socketConnect ?? Socket.connect;
-      final socket = await connect(ip, port,
-          timeout: const Duration(milliseconds: 500));
-      socket.destroy();
-      open.add(port);
+      for (final port in portList) {
+        try {
+          final connect = socketConnect ?? Socket.connect;
+          final socket = await connect(ip, port,
+              timeout: const Duration(milliseconds: 500));
+          socket.destroy();
+          openPorts.add(port);
+        } catch (_) {
+          // closed
+        }
+      }
+      success = true;
     } catch (_) {
-      // closed
+      // Socket scanning failed
     }
   }
-  if (open.isNotEmpty) {
-    return 'Open ports: ${open.join(', ')}';
+
+  if (!success) {
+    return 'Scan failed';
+  }
+  if (openPorts.isNotEmpty) {
+    return 'Open ports: ${openPorts.join(', ')}';
   }
   return 'No open ports';
 }
