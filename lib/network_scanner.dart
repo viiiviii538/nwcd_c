@@ -101,7 +101,7 @@ Future<List<NetworkDevice>> _pingSweep(String subnet) async {
   final parts = subnet.split('/');
   if (parts.length != 2) return [];
   final baseIp = parts[0];
-  final prefix = int.tryParse(parts[1]!) ?? 24;
+  final prefix = int.tryParse(parts[1]) ?? 24;
   final start = _ipToInt(calculateNetwork(baseIp, prefix));
   final count = 1 << (32 - prefix);
   final tasks = <Future<void>>[];
