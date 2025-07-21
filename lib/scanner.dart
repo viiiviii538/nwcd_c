@@ -49,9 +49,15 @@ Future<String> scanDeviceVersion() async {
 /// function falls back to attempting socket connections to a small set of
 /// frequently used ports. The returned string lists the detected open ports or
 /// `No open ports` when none are found or the scan fails.
-Future<String> checkOpenPorts([String ip = '127.0.0.1']) async {
+Future<String> checkOpenPorts([
+  String ip = '127.0.0.1', {
+  Future<ProcessResult> Function(String, List<String>)? runProcess,
+  Future<Socket> Function(String, int, {Duration? timeout})? socketConnect,
+  List<int>? ports,
+}]) async {
   try {
-    final result = await Process.run('nmap', ['-p', '1-1024', ip]);
+    final exec = runProcess ?? Process.run;
+    final result = await exec('nmap', ['-p', '1-1024', ip]);
     if (result.exitCode == 0) {
       final openPorts = <int>[];
       final lines = (result.stdout as String).split('\n');
@@ -71,11 +77,13 @@ Future<String> checkOpenPorts([String ip = '127.0.0.1']) async {
     // Ignore and fall back to socket based scanning
   }
 
-  const commonPorts = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3389];
+  final portList = ports ??
+      const [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3389];
   final open = <int>[];
-  for (final port in commonPorts) {
+  for (final port in portList) {
     try {
-      final socket = await Socket.connect(ip, port,
+      final connect = socketConnect ?? Socket.connect;
+      final socket = await connect(ip, port,
           timeout: const Duration(milliseconds: 500));
       socket.destroy();
       open.add(port);
