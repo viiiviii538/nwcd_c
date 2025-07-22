@@ -95,7 +95,7 @@ class _HomePageState extends State<HomePage>
       _fullScanResults = null;
     });
     final info = await deviceVersionScan(_fullScanIp);
-    final portResult = await checkOpenPorts(_fullScanIp);
+    final portResult = await checkOpenPorts(ip: _fullScanIp);
     final result = FullScanResult(
       target: _fullScanIp,
       osOutdated: info.osVersion == 'Unknown',

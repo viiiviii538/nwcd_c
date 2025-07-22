@@ -62,12 +62,12 @@ Future<String> scanDeviceVersion() async {
 /// function falls back to attempting socket connections to a small set of
 /// frequently used ports. The returned string lists the detected open ports or
 /// `No open ports` when none are found or the scan fails.
-Future<PortScanResult> checkOpenPorts([
-  String ip = '127.0.0.1', {
+Future<PortScanResult> checkOpenPorts({
+  String ip = '127.0.0.1',
   Future<ProcessResult> Function(String, List<String>)? runProcess,
   Future<Socket> Function(String, int, {Duration? timeout})? socketConnect,
   List<int>? ports,
-}]) async {
+}) async {
   final openPorts = <int>[];
   bool success = false;
   String? error;
@@ -102,11 +102,11 @@ Future<PortScanResult> checkOpenPorts([
               timeout: const Duration(milliseconds: 500));
           socket.destroy();
           openPorts.add(port);
+          success = true;
         } catch (_) {
-          // closed
+          // closed or unreachable
         }
       }
-      success = true;
     } catch (_) {
       // Socket scanning failed
     }
