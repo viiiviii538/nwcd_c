@@ -15,36 +15,63 @@ class NetworkDevice {
   });
 }
 
-Future<List<NetworkDevice>> scanNetwork() async {
+/// Result of a network scan. [devices] contains any discovered hosts while
+/// [error] is populated when a required command was unavailable.
+class NetworkScanResult {
+  final List<NetworkDevice> devices;
+  final String? error;
+
+  NetworkScanResult({required this.devices, this.error});
+}
+
+/// Result of querying local network interfaces.
+class SubnetsResult {
+  final List<String> subnets;
+  final String? error;
+
+  SubnetsResult({required this.subnets, this.error});
+}
+
+Future<NetworkScanResult> scanNetwork() async {
+  final errors = <String>[];
   try {
-    final subnets = await getLocalSubnets();
+    final subnetResult = await getLocalSubnets();
+    if (subnetResult.error != null && subnetResult.subnets.isEmpty) {
+      return NetworkScanResult(devices: const [], error: subnetResult.error);
+    }
     final devices = <NetworkDevice>[];
-    for (final subnet in subnets) {
-      final nmapOutput = await _runNmap(subnet);
+    for (final subnet in subnetResult.subnets) {
+      final nmapOutput = await _runNmap(subnet,
+          onError: (e) => errors.add(e));
       if (nmapOutput != null) {
         devices.addAll(_parseNmapOutput(nmapOutput));
       } else {
-        devices.addAll(await _pingSweep(subnet));
+        devices.addAll(await _pingSweep(subnet,
+            readArpTable: () => _readArpTable(onError: (e) => errors.add(e))));
       }
     }
     final unique = <String, NetworkDevice>{};
     for (final d in devices) {
       unique[d.ip] = d;
     }
-    return unique.values.toList();
+    final msg = errors.isEmpty ? subnetResult.error : errors.join('; ');
+    return NetworkScanResult(
+      devices: unique.values.toList(),
+      error: (msg == null || msg.isEmpty) ? null : msg,
+    );
   } catch (_) {
-    return [];
+    return NetworkScanResult(devices: const [], error: 'Network scan failed');
   }
 }
 
-Future<String?> _runNmap(String subnet) async {
+Future<String?> _runNmap(String subnet, {void Function(String message)? onError}) async {
   try {
     final result = await Process.run('nmap', ['-sn', subnet]);
     if (result.exitCode == 0) {
       return result.stdout as String;
     }
   } on ProcessException {
-    // ignore
+    onError?.call('nmap command not found');
   }
   return null;
 }
@@ -156,8 +183,14 @@ Future<void> _pingAddress(String ip) async {
   } catch (_) {}
 }
 
-Future<List<NetworkDevice>> _readArpTable() async {
-  final result = await Process.run('arp', ['-a']);
+Future<List<NetworkDevice>> _readArpTable({void Function(String message)? onError}) async {
+  ProcessResult result;
+  try {
+    result = await Process.run('arp', ['-a']);
+  } on ProcessException {
+    onError?.call('arp command not found');
+    return [];
+  }
   if (result.exitCode != 0) return [];
   final output = result.stdout as String;
   final devices = <NetworkDevice>[];
@@ -213,12 +246,13 @@ String _lookupVendor(String mac) {
 }
 
 /// Returns a list of local network subnets in CIDR notation (e.g. 192.168.0.0/24).
-Future<List<String>> getLocalSubnets() async {
+Future<SubnetsResult> getLocalSubnets() async {
   final subnets = <String>{};
+  String? error;
   try {
     if (Platform.isWindows) {
       final result = await Process.run('ipconfig', []);
-      if (result.exitCode != 0) return [];
+      if (result.exitCode != 0) return SubnetsResult(subnets: const [], error: 'Failed to run ipconfig');
       final lines = (result.stdout as String).split(RegExp(r'\r?\n'));
       String? ip;
       String? mask;
@@ -242,6 +276,7 @@ Future<List<String>> getLocalSubnets() async {
       try {
         result = await Process.run('ip', ['-o', '-f', 'inet', 'addr', 'show']);
       } on ProcessException {
+        error = 'ip command not found';
         result = ProcessResult(0, 1, '', '');
       }
       if (result.exitCode == 0) {
@@ -256,8 +291,15 @@ Future<List<String>> getLocalSubnets() async {
           }
         }
       } else {
-        final resultIfconfig = await Process.run('ifconfig', []);
-        if (resultIfconfig.exitCode != 0) return [];
+        ProcessResult resultIfconfig;
+        try {
+          resultIfconfig = await Process.run('ifconfig', []);
+        } on ProcessException {
+          return SubnetsResult(subnets: const [], error: 'ifconfig command not found');
+        }
+        if (resultIfconfig.exitCode != 0) {
+          return SubnetsResult(subnets: const [], error: error ?? 'Failed to run ifconfig');
+        }
         final output = resultIfconfig.stdout as String;
         final regex =
             RegExp(r'inet ([0-9.]+) +netmask +(0x[0-9a-fA-F]+|[0-9.]+)');
@@ -274,9 +316,9 @@ Future<List<String>> getLocalSubnets() async {
       }
     }
   } catch (_) {
-    return [];
+    return SubnetsResult(subnets: const [], error: 'Failed to obtain subnets');
   }
-  return subnets.toList();
+  return SubnetsResult(subnets: subnets.toList(), error: error);
 }
 
 /// Converts a dotted decimal subnet mask (e.g. 255.255.255.0) to prefix length.

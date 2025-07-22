@@ -39,6 +39,7 @@ PORT   STATE SERVICE VERSION
       expect(result.firmwareVersion, 'Unknown');
       expect(result.softwareVersions, isEmpty);
       expect(result.cveMatches, isEmpty);
+      expect(result.error, 'nmap command not found');
     });
   });
 }

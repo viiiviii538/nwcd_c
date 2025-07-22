@@ -8,12 +8,14 @@ class DeviceVersionInfo {
   final String firmwareVersion;
   final List<String> softwareVersions;
   final List<String> cveMatches;
+  final String? error;
 
   DeviceVersionInfo({
     required this.osVersion,
     required this.firmwareVersion,
     required this.softwareVersions,
     required this.cveMatches,
+    this.error,
   });
 
   @override
@@ -33,8 +35,19 @@ class DeviceVersionInfo {
         buffer.writeln('  - $cve');
       }
     }
+    if (error != null) {
+      buffer.writeln('Error: $error');
+    }
     return buffer.toString().trim();
   }
+}
+
+/// Result of an open port scan.
+class PortScanResult {
+  final String result;
+  final String? error;
+
+  PortScanResult(this.result, [this.error]);
 }
 
 Future<String> scanDeviceVersion() async {
@@ -49,7 +62,7 @@ Future<String> scanDeviceVersion() async {
 /// function falls back to attempting socket connections to a small set of
 /// frequently used ports. The returned string lists the detected open ports or
 /// `No open ports` when none are found or the scan fails.
-Future<String> checkOpenPorts([
+Future<PortScanResult> checkOpenPorts([
   String ip = '127.0.0.1', {
   Future<ProcessResult> Function(String, List<String>)? runProcess,
   Future<Socket> Function(String, int, {Duration? timeout})? socketConnect,
@@ -57,6 +70,7 @@ Future<String> checkOpenPorts([
 }]) async {
   final openPorts = <int>[];
   bool success = false;
+  String? error;
 
   try {
     final exec = runProcess ?? Process.run;
@@ -72,7 +86,8 @@ Future<String> checkOpenPorts([
         }
       }
     }
-  } catch (_) {
+  } on ProcessException {
+    error = 'nmap command not found';
     // Ignore and fall back to socket based scanning
   }
 
@@ -98,12 +113,12 @@ Future<String> checkOpenPorts([
   }
 
   if (!success) {
-    return 'Scan failed';
+    return PortScanResult('Scan failed', error);
   }
   if (openPorts.isNotEmpty) {
-    return 'Open ports: ${openPorts.join(', ')}';
+    return PortScanResult('Open ports: ${openPorts.join(', ')}', error);
   }
-  return 'No open ports';
+  return PortScanResult('No open ports', error);
 }
 
 /// Scan a device at [ip] using `nmap` to gather version information.
@@ -151,12 +166,21 @@ Future<DeviceVersionInfo> deviceVersionScan(
       softwareVersions: softwareVersions,
       cveMatches: cveMatches,
     );
+  } on ProcessException {
+    return DeviceVersionInfo(
+      osVersion: 'Unknown',
+      firmwareVersion: 'Unknown',
+      softwareVersions: const [],
+      cveMatches: const [],
+      error: 'nmap command not found',
+    );
   } catch (_) {
     return DeviceVersionInfo(
       osVersion: 'Unknown',
       firmwareVersion: 'Unknown',
       softwareVersions: const [],
       cveMatches: const [],
+      error: 'Version scan failed',
     );
   }
 }

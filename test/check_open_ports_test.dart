@@ -9,7 +9,8 @@ void main() {
       '127.0.0.1',
       runProcess: (_, __) async => ProcessResult(0, 0, sample, ''),
     );
-    expect(result, 'Open ports: 22, 80');
+    expect(result.result, 'Open ports: 22, 80');
+    expect(result.error, isNull);
   });
 
   test('falls back to socket scan on ProcessException', () async {
@@ -20,7 +21,8 @@ void main() {
       ports: [server.port],
     );
     await server.close();
-    expect(result, 'Open ports: ${server.port}');
+    expect(result.result, 'Open ports: ${server.port}');
+    expect(result.error, 'nmap command not found');
   });
   test('returns failure message when scan cannot be performed', () async {
     final result = await checkOpenPorts(
@@ -28,7 +30,8 @@ void main() {
       runProcess: (_, __) async => throw ProcessException('nmap', []),
       socketConnect: (_, __, {timeout}) async => throw SocketException('fail'),
     );
-    expect(result, 'Scan failed');
+    expect(result.result, 'Scan failed');
+    expect(result.error, 'nmap command not found');
   });
 
 }

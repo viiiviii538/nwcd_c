@@ -95,18 +95,26 @@ class _HomePageState extends State<HomePage>
       _fullScanResults = null;
     });
     final info = await deviceVersionScan(_fullScanIp);
-    final portInfo = await checkOpenPorts(_fullScanIp);
+    final portResult = await checkOpenPorts(_fullScanIp);
     final result = FullScanResult(
       target: _fullScanIp,
       osOutdated: info.osVersion == 'Unknown',
       hasCve: info.cveMatches.isNotEmpty,
-      openPorts: portInfo,
+      openPorts: portResult.result,
     );
     if (!mounted) return;
     setState(() {
       _fullScanLoading = false;
       _fullScanResults = [result];
     });
+    if (info.error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(info.error!)));
+    }
+    if (portResult.error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(portResult.error!)));
+    }
   }
 
   Future<void> _startNetworkScan() async {
@@ -114,12 +122,16 @@ class _HomePageState extends State<HomePage>
       _networkScanLoading = true;
       _networkDevices = null;
     });
-    final devices = await scanNetwork();
+    final result = await scanNetwork();
     if (!mounted) return;
     setState(() {
       _networkScanLoading = false;
-      _networkDevices = devices;
+      _networkDevices = result.devices;
     });
+    if (result.error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.error!)));
+    }
   }
 
   @override
