@@ -27,6 +27,7 @@ class NetworkDiagram extends StatelessWidget {
       ..orientation = BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM;
 
     return InteractiveViewer(
+      constrained: false,
       boundaryMargin: const EdgeInsets.all(20),
       minScale: 0.01,
       maxScale: 5,
