@@ -30,9 +30,6 @@ class _HomePageState extends State<HomePage>
   bool _realtimeRunning = false;
   bool _fullScanLoading = false;
   List<FullScanResult>? _fullScanResults;
-  late final TextEditingController _ipController;
-  String _fullScanIp = '127.0.0.1';
-  bool _fullScanIpValid = true;
   bool _networkScanLoading = false;
   List<NetworkDevice>? _networkDevices;
   final List<String> _realtimeLogs = [];
@@ -42,8 +39,6 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _ipController = TextEditingController(text: _fullScanIp);
-    _fullScanIpValid = _validateIp(_fullScanIp);
   }
 
   void _startRealTimeScan() {
@@ -71,49 +66,52 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  bool _validateIp(String ip) {
-    final parts = ip.split('.');
-    if (parts.length != 4) return false;
-    for (final part in parts) {
-      final value = int.tryParse(part);
-      if (value == null || value < 0 || value > 255) return false;
-    }
-    return true;
-  }
 
-  void _onIpChanged(String value) {
-    setState(() {
-      _fullScanIp = value;
-      _fullScanIpValid = _validateIp(value);
-    });
-  }
 
   Future<void> _startFullScan() async {
-    if (!_fullScanIpValid) return;
     setState(() {
       _fullScanLoading = true;
       _fullScanResults = null;
     });
-    final info = await deviceVersionScan(_fullScanIp);
-    final portResult = await checkOpenPorts(ip: _fullScanIp);
-    final result = FullScanResult(
-      target: _fullScanIp,
-      osOutdated: info.osVersion == 'Unknown',
-      hasCve: info.cveMatches.isNotEmpty,
-      openPorts: portResult.result,
-    );
+
+    NetworkScanResult networkResult;
+    try {
+      networkResult =
+          await scanNetwork().timeout(const Duration(seconds: 2));
+    } on TimeoutException {
+      networkResult =
+          NetworkScanResult(devices: const [], error: 'Network scan timed out');
+    }
+
+    final ips = networkResult.devices.map((d) => d.ip).toSet();
+    if (ips.isEmpty) ips.add('127.0.0.1');
+
+    final results = <FullScanResult>[];
+    final errors = <String>[];
+
+    for (final ip in ips) {
+      final info = await deviceVersionScan(ip);
+      final portResult = await checkOpenPorts(ip: ip);
+      results.add(FullScanResult(
+        target: ip,
+        osOutdated: info.osVersion == 'Unknown',
+        hasCve: info.cveMatches.isNotEmpty,
+        openPorts: portResult.result,
+      ));
+      if (info.error != null) errors.add(info.error!);
+      if (portResult.error != null) errors.add(portResult.error!);
+    }
+
     if (!mounted) return;
     setState(() {
       _fullScanLoading = false;
-      _fullScanResults = [result];
+      _fullScanResults = results;
     });
-    if (info.error != null) {
+
+    if (networkResult.error != null) errors.add(networkResult.error!);
+    if (errors.isNotEmpty) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(info.error!)));
-    }
-    if (portResult.error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(portResult.error!)));
+          .showSnackBar(SnackBar(content: Text(errors.join('; '))));
     }
   }
 
@@ -188,18 +186,8 @@ class _HomePageState extends State<HomePage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
-            controller: _ipController,
-            decoration: InputDecoration(
-              labelText: 'IPアドレス',
-              errorText: _fullScanIpValid ? null : 'Invalid IP',
-            ),
-            onChanged: _onIpChanged,
-          ),
-          const SizedBox(height: 16),
           ElevatedButton(
-            onPressed:
-                isLoading || !_fullScanIpValid ? null : _startFullScan,
+            onPressed: isLoading ? null : _startFullScan,
             child: const Text('フルスキャン開始'),
           ),
           const SizedBox(height: 16),
@@ -278,7 +266,6 @@ class _HomePageState extends State<HomePage>
   @override
   void dispose() {
     _realtimeTimer?.cancel();
-    _ipController.dispose();
     _tabController.dispose();
     super.dispose();
   }

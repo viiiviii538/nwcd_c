@@ -16,7 +16,7 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     // Wait for scan to finish and results to display
-    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(seconds: 4));
     await tester.pumpAndSettle();
 
     expect(find.byType(DataTable), findsOneWidget);
@@ -24,9 +24,9 @@ void main() {
     expect(find.text('CVE脆弱性検出あり'), findsOneWidget);
     expect(find.text('開放ポート'), findsOneWidget);
     // Row information should include scan results
-    expect(find.text('127.0.0.1'), findsOneWidget);
-    expect(find.text('Yes'), findsOneWidget);
-    expect(find.text('No'), findsOneWidget);
+    expect(find.text('127.0.0.1'), findsWidgets);
+    expect(find.text('Yes'), findsWidgets);
+    expect(find.text('No'), findsWidgets);
     expect(find.text('フルスキャン開始'), findsOneWidget);
   });
 }
