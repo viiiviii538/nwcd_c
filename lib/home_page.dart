@@ -94,26 +94,45 @@ class _HomePageState extends State<HomePage>
       _fullScanLoading = true;
       _fullScanResults = null;
     });
-    final info = await deviceVersionScan(_fullScanIp);
-    final portResult = await checkOpenPorts(ip: _fullScanIp);
-    final result = FullScanResult(
-      target: _fullScanIp,
-      osOutdated: info.osVersion == 'Unknown',
-      hasCve: info.cveMatches.isNotEmpty,
-      openPorts: portResult.result,
-    );
+
+    NetworkScanResult networkResult;
+    try {
+      networkResult =
+          await scanNetwork().timeout(const Duration(seconds: 2));
+    } on TimeoutException {
+      networkResult =
+          NetworkScanResult(devices: const [], error: 'Network scan timed out');
+    }
+
+    final ips = <String>{_fullScanIp};
+    ips.addAll(networkResult.devices.map((d) => d.ip));
+
+    final results = <FullScanResult>[];
+    final errors = <String>[];
+
+    for (final ip in ips) {
+      final info = await deviceVersionScan(ip);
+      final portResult = await checkOpenPorts(ip: ip);
+      results.add(FullScanResult(
+        target: ip,
+        osOutdated: info.osVersion == 'Unknown',
+        hasCve: info.cveMatches.isNotEmpty,
+        openPorts: portResult.result,
+      ));
+      if (info.error != null) errors.add(info.error!);
+      if (portResult.error != null) errors.add(portResult.error!);
+    }
+
     if (!mounted) return;
     setState(() {
       _fullScanLoading = false;
-      _fullScanResults = [result];
+      _fullScanResults = results;
     });
-    if (info.error != null) {
+
+    if (networkResult.error != null) errors.add(networkResult.error!);
+    if (errors.isNotEmpty) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(info.error!)));
-    }
-    if (portResult.error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(portResult.error!)));
+          .showSnackBar(SnackBar(content: Text(errors.join('; '))));
     }
   }
 
