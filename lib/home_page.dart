@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:isolate';
 import 'package:flutter/material.dart';
 import 'scanner.dart';
 import 'network_scanner.dart';
+import 'network_scan_isolate.dart';
 import 'network_diagram.dart';
 
 class FullScanResult {
@@ -94,13 +96,29 @@ class _HomePageState extends State<HomePage>
       _networkScanLoading = true;
       _networkDevices = null;
     });
-    final scan = widget.scanNetworkFn ?? scanNetwork;
-    final devices = await scan();
-    if (!mounted) return;
-    setState(() {
-      _networkScanLoading = false;
-      _networkDevices = devices;
+
+    final customScan = widget.scanNetworkFn;
+    if (customScan != null) {
+      final devices = await customScan();
+      if (!mounted) return;
+      setState(() {
+        _networkScanLoading = false;
+        _networkDevices = devices;
+      });
+      return;
+    }
+
+    final port = ReceivePort();
+    port.listen((message) {
+      if (message is List<NetworkDevice> && mounted) {
+        setState(() {
+          _networkScanLoading = false;
+          _networkDevices = message;
+        });
+        port.close();
+      }
     });
+    await Isolate.spawn(networkScanIsolate, port.sendPort);
   }
 
   @override

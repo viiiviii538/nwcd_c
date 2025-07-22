@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:meta/meta.dart';
 
 class NetworkDevice {
@@ -120,11 +121,15 @@ Future<List<NetworkDevice>> _pingSweep(
   }
 
   final ping = pingAddress ?? _pingAddress;
-  final tasks = <Future<void>>[];
-  for (var i = 1; i <= toScan; i++) {
-    tasks.add(ping(_intToIp(start + i)));
+  const batchSize = 20;
+  for (var i = 1; i <= toScan; i += batchSize) {
+    final end = min(toScan, i + batchSize - 1);
+    final tasks = <Future<void>>[];
+    for (var j = i; j <= end; j++) {
+      tasks.add(ping(_intToIp(start + j)));
+    }
+    await Future.wait(tasks);
   }
-  await Future.wait(tasks);
   final arpEntries = await (readArpTable ?? _readArpTable)();
   return arpEntries.where((e) {
     final ipInt = _ipToInt(e.ip);
