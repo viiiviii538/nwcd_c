@@ -55,9 +55,10 @@ choco install nmap
 3. When finished, it navigates to the results page.
 
 ### Full scan
-1. Tap **フルスキャン** on the home screen.
-2. A more thorough scan is executed and a progress indicator is shown.
-3. After completion, the app navigates to the results page.
+1. Tap **フルスキャン** on the home screen. No IP address entry is needed.
+2. The app automatically discovers hosts on the local network and then
+   performs version and port scans against each device.
+3. When complete, the results appear in a table below the button.
 
 ### Network diagram
 1. Tap **ネットワーク図** on the home screen.
