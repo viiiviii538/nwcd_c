@@ -36,7 +36,7 @@ List<TopologyLink> _parseLldpctl(String output) {
       currentInterface = interfaceMatch.group(1)!.trim();
       continue;
     }
-    final sysNameMatch = RegExp(r'^SysName:\s*(.+)\$').firstMatch(trimmed);
+    final sysNameMatch = RegExp(r'^SysName:\s*(.+)$').firstMatch(trimmed);
     if (sysNameMatch != null && currentInterface != null) {
       links.add(TopologyLink(from: currentInterface, to: sysNameMatch.group(1)!));
       currentInterface = null;
