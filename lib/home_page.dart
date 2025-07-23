@@ -124,10 +124,19 @@ class _HomePageState extends State<HomePage>
 
     final port = ReceivePort();
     port.listen((message) async {
-      if (message is List<NetworkDevice> && mounted) {
+      if (message is List && mounted) {
+        final devices = message
+            .whereType<Map>()
+            .map((m) => NetworkDevice(
+                  ip: m['ip'] ?? '',
+                  mac: m['mac'] ?? '',
+                  vendor: m['vendor'] ?? '',
+                  name: m['name'] ?? '',
+                ))
+            .toList();
         setState(() {
           _networkScanLoading = false;
-          _networkDevices = message;
+          _networkDevices = devices;
         });
         final topo =
             customTopo != null ? await customTopo() : await scanTopology();
