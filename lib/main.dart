@@ -8,8 +8,9 @@ void main() {
 
 class MyApp extends StatelessWidget {
   final Future<List<NetworkDevice>> Function()? networkScanFn;
+  final Future<List<TopologyLink>> Function()? topologyScanFn;
 
-  const MyApp({super.key, this.networkScanFn});
+  const MyApp({super.key, this.networkScanFn, this.topologyScanFn});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +19,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: HomePage(scanNetworkFn: networkScanFn),
+      home: HomePage(
+        scanNetworkFn: networkScanFn,
+        scanTopologyFn: topologyScanFn,
+      ),
     );
   }
 }

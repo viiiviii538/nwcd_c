@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nwcd_c/main.dart';
 import 'package:nwcd_c/network_scanner.dart';
 import 'package:nwcd_c/network_diagram.dart';
+import 'package:nwcd_c/topology_scanner.dart';
 
 void main() {
   testWidgets('Full scan shows table results', (WidgetTester tester) async {
@@ -44,7 +45,10 @@ void main() {
       ];
     }
 
-    await tester.pumpWidget(MyApp(networkScanFn: fakeScan));
+    await tester.pumpWidget(MyApp(
+      networkScanFn: fakeScan,
+      topologyScanFn: () async => [TopologyLink(from: 'Local', to: 'Device1')],
+    ));
 
     await tester.tap(find.widgetWithText(Tab, 'ネットワーク図'));
     await tester.pumpAndSettle();
