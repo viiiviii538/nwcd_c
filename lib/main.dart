@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'network_scanner.dart';
+import 'topology_scanner.dart';
 
 void main() {
   runApp(const MyApp());
