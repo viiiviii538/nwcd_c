@@ -90,7 +90,7 @@ class _HomePageState extends State<HomePage>
     }
 
     final results = <FullScanResult>[];
-    final errors = <String>[];
+    final errors = <String>{};
 
     for (final ip in ips) {
       final info = await deviceVersionScan(ip);
