@@ -63,5 +63,17 @@ class NetworkDiagram extends StatelessWidget {
       maxScale: 5,
       child: graphWidget,
     );
+
+    if (width != null || height != null) {
+      graphWidget = SizedBox(width: width, height: height, child: graphWidget);
+    }
+
+    return InteractiveViewer(
+      constrained: false,
+      boundaryMargin: const EdgeInsets.all(20),
+      minScale: 0.01,
+      maxScale: 5,
+      child: graphWidget,
+    );
   }
 }
