@@ -77,7 +77,7 @@ class _HomePageState extends State<HomePage>
     NetworkScanResult networkResult;
     try {
       networkResult =
-          await scanNetwork().timeout(const Duration(seconds: 10));
+          await scanNetwork().timeout(const Duration(seconds:10));
     } on TimeoutException {
       networkResult =
           NetworkScanResult(devices: const [], error: 'Network scan timed out');
