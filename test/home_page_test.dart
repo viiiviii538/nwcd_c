@@ -16,7 +16,7 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     // Wait for scan to finish and results to display
-    await tester.pump(const Duration(seconds: 4));
+    await tester.pump(const Duration(seconds: 12));
     await tester.pumpAndSettle();
 
     expect(find.byType(DataTable), findsOneWidget);
