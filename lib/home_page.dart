@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'scanner.dart';
-import 'network_scanner.dart';
+import 'package:nwcd_c/scanner.dart';
+import 'package:nwcd_c/network_scanner.dart';
 
 class FullScanResult {
   final String target;
