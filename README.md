@@ -18,6 +18,18 @@ flutter pub get
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for additional details.
 
+### Required external tools
+The scanning features rely on several command line utilities being available on
+your system:
+
+- `nmap` for network discovery (optional fallback to ping/arp if unavailable)
+- `ping` and `arp` for host detection
+- `ip` or `ifconfig` to enumerate local interfaces
+- `lldpctl` to gather topology information
+
+Make sure these commands are installed and accessible in your `PATH` when
+running the app.
+
 ## Workflows
 
 ### Real-time scan

@@ -18,9 +18,16 @@ Future<List<TopologyLink>> scanTopology({
   final run = runLldpctl ?? () => Process.run('lldpctl', []);
   try {
     final result = await run();
-    if (result.exitCode != 0) return [];
+    if (result.exitCode != 0) {
+      print('lldpctl exited with code ${result.exitCode}');
+      return [];
+    }
     return _parseLldpctl(result.stdout as String);
-  } catch (_) {
+  } on ProcessException catch (e) {
+    print('lldpctl command not found: ${e.message}');
+    return [];
+  } catch (e) {
+    print('scanTopology failed: $e');
     return [];
   }
 }

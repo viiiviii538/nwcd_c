@@ -31,7 +31,8 @@ Future<List<NetworkDevice>> scanNetwork() async {
       unique[d.ip] = d;
     }
     return unique.values.toList();
-  } catch (_) {
+  } catch (e) {
+    print('scanNetwork failed: $e');
     return [];
   }
 }
@@ -41,9 +42,13 @@ Future<String?> _runNmap(String subnet) async {
     final result = await Process.run('nmap', ['-sn', subnet]);
     if (result.exitCode == 0) {
       return result.stdout as String;
+    } else {
+      print('nmap exited with code ${result.exitCode}');
     }
-  } on ProcessException {
-    // ignore
+  } on ProcessException catch (e) {
+    // Surface that `nmap` is unavailable so callers can fall back.
+    print('nmap command not found: ${e.message}');
+    return null;
   }
   return null;
 }
@@ -123,11 +128,19 @@ Future<void> _pingAddress(String ip) async {
     } else {
       await Process.run('ping', ['-c', '1', '-W', '1', ip]);
     }
+  } on ProcessException catch (e) {
+    print('ping command not found: ${e.message}');
   } catch (_) {}
 }
 
 Future<List<NetworkDevice>> _readArpTable() async {
-  final result = await Process.run('arp', ['-a']);
+  ProcessResult result;
+  try {
+    result = await Process.run('arp', ['-a']);
+  } on ProcessException catch (e) {
+    print('arp command not found: ${e.message}');
+    return [];
+  }
   if (result.exitCode != 0) return [];
   final output = result.stdout as String;
   final devices = <NetworkDevice>[];
@@ -187,7 +200,13 @@ Future<List<String>> getLocalSubnets() async {
   final subnets = <String>{};
   try {
     if (Platform.isWindows) {
-      final result = await Process.run('ipconfig', []);
+      ProcessResult result;
+      try {
+        result = await Process.run('ipconfig', []);
+      } on ProcessException catch (e) {
+        print('ipconfig command not found: ${e.message}');
+        return [];
+      }
       if (result.exitCode != 0) return [];
       final lines = (result.stdout as String).split(RegExp(r'\r?\n'));
       String? ip;
@@ -211,7 +230,8 @@ Future<List<String>> getLocalSubnets() async {
       ProcessResult result;
       try {
         result = await Process.run('ip', ['-o', '-f', 'inet', 'addr', 'show']);
-      } on ProcessException {
+      } on ProcessException catch (e) {
+        print('ip command not found: ${e.message}');
         result = ProcessResult(0, 1, '', '');
       }
       if (result.exitCode == 0) {
@@ -226,7 +246,13 @@ Future<List<String>> getLocalSubnets() async {
           }
         }
       } else {
-        final resultIfconfig = await Process.run('ifconfig', []);
+        ProcessResult resultIfconfig;
+        try {
+          resultIfconfig = await Process.run('ifconfig', []);
+        } on ProcessException catch (e) {
+          print('ifconfig command not found: ${e.message}');
+          return [];
+        }
         if (resultIfconfig.exitCode != 0) return [];
         final output = resultIfconfig.stdout as String;
         final regex =
