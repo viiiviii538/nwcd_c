@@ -39,18 +39,29 @@ class NetworkDiagram extends StatelessWidget {
       ..orientation = BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM;
 
     Widget graphWidget = GraphView(
-        graph: graph,
-        algorithm: BuchheimWalkerAlgorithm(layout, TreeEdgeRenderer(layout)),
-        builder: (Node node) {
-          final id = node.key?.value ?? '';
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text('$id'),
-            ),
-          );
-        },
-      ),
+      graph: graph,
+      algorithm: BuchheimWalkerAlgorithm(layout, TreeEdgeRenderer(layout)),
+      builder: (Node node) {
+        final id = node.key?.value ?? '';
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text('$id'),
+          ),
+        );
+      },
+    );
+
+    if (width != null || height != null) {
+      graphWidget = SizedBox(width: width, height: height, child: graphWidget);
+    }
+
+    return InteractiveViewer(
+      constrained: false,
+      boundaryMargin: const EdgeInsets.all(20),
+      minScale: 0.01,
+      maxScale: 5,
+      child: graphWidget,
     );
 
     if (width != null || height != null) {
