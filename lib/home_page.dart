@@ -30,9 +30,6 @@ class _HomePageState extends State<HomePage>
   bool _realtimeRunning = false;
   bool _fullScanLoading = false;
   List<FullScanResult>? _fullScanResults;
-  late final TextEditingController _ipController;
-  String _fullScanIp = '127.0.0.1';
-  bool _fullScanIpValid = true;
   bool _networkScanLoading = false;
   List<NetworkDevice>? _networkDevices;
   final List<String> _realtimeLogs = [];
@@ -42,8 +39,6 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _ipController = TextEditingController(text: _fullScanIp);
-    _fullScanIpValid = _validateIp(_fullScanIp);
   }
 
   void _startRealTimeScan() {
@@ -71,25 +66,9 @@ class _HomePageState extends State<HomePage>
     }
   }
 
-  bool _validateIp(String ip) {
-    final parts = ip.split('.');
-    if (parts.length != 4) return false;
-    for (final part in parts) {
-      final value = int.tryParse(part);
-      if (value == null || value < 0 || value > 255) return false;
-    }
-    return true;
-  }
 
-  void _onIpChanged(String value) {
-    setState(() {
-      _fullScanIp = value;
-      _fullScanIpValid = _validateIp(value);
-    });
-  }
 
   Future<void> _startFullScan() async {
-    if (!_fullScanIpValid) return;
     setState(() {
       _fullScanLoading = true;
       _fullScanResults = null;
@@ -104,8 +83,11 @@ class _HomePageState extends State<HomePage>
           NetworkScanResult(devices: const [], error: 'Network scan timed out');
     }
 
-    final ips = <String>{_fullScanIp};
+    final ips = <String>{};
     ips.addAll(networkResult.devices.map((d) => d.ip));
+    if (ips.isEmpty) {
+      ips.add('127.0.0.1');
+    }
 
     final results = <FullScanResult>[];
     final errors = <String>[];
@@ -207,18 +189,8 @@ class _HomePageState extends State<HomePage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
-            controller: _ipController,
-            decoration: InputDecoration(
-              labelText: 'IPアドレス',
-              errorText: _fullScanIpValid ? null : 'Invalid IP',
-            ),
-            onChanged: _onIpChanged,
-          ),
-          const SizedBox(height: 16),
           ElevatedButton(
-            onPressed:
-                isLoading || !_fullScanIpValid ? null : _startFullScan,
+            onPressed: isLoading ? null : _startFullScan,
             child: const Text('フルスキャン開始'),
           ),
           const SizedBox(height: 16),
@@ -297,7 +269,6 @@ class _HomePageState extends State<HomePage>
   @override
   void dispose() {
     _realtimeTimer?.cancel();
-    _ipController.dispose();
     _tabController.dispose();
     super.dispose();
   }
