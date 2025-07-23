@@ -4,9 +4,21 @@ import 'network_scanner.dart';
 
 /// Displays a simple star topology graph of the discovered [devices].
 class NetworkDiagram extends StatelessWidget {
+  /// Devices displayed in the diagram.
   final List<NetworkDevice> devices;
 
-  const NetworkDiagram({super.key, required this.devices});
+  /// Optional width for the diagram. Specify when a fixed size is required.
+  final double? width;
+
+  /// Optional height for the diagram. Specify when a fixed size is required.
+  final double? height;
+
+  const NetworkDiagram({
+    super.key,
+    required this.devices,
+    this.width,
+    this.height,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,12 +38,7 @@ class NetworkDiagram extends StatelessWidget {
       ..subtreeSeparation = 30
       ..orientation = BuchheimWalkerConfiguration.ORIENTATION_TOP_BOTTOM;
 
-    return InteractiveViewer(
-      constrained: false,
-      boundaryMargin: const EdgeInsets.all(20),
-      minScale: 0.01,
-      maxScale: 5,
-      child: GraphView(
+    Widget graphWidget = GraphView(
         graph: graph,
         algorithm: BuchheimWalkerAlgorithm(layout, TreeEdgeRenderer(layout)),
         builder: (Node node) {
@@ -44,6 +51,18 @@ class NetworkDiagram extends StatelessWidget {
           );
         },
       ),
+    );
+
+    if (width != null || height != null) {
+      graphWidget = SizedBox(width: width, height: height, child: graphWidget);
+    }
+
+    return InteractiveViewer(
+      constrained: false,
+      boundaryMargin: const EdgeInsets.all(20),
+      minScale: 0.01,
+      maxScale: 5,
+      child: graphWidget,
     );
   }
 }
