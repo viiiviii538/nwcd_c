@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'scanner.dart';
-import 'network_scanner.dart';
+import 'package:nwcd_c/scanner.dart';
+import 'package:nwcd_c/network_scanner.dart';
 
 class FullScanResult {
   final String target;
@@ -66,24 +66,56 @@ class _HomePageState extends State<HomePage>
     }
   }
 
+
+
   Future<void> _startFullScan() async {
     setState(() {
       _fullScanLoading = true;
       _fullScanResults = null;
     });
-    final info = await deviceVersionScan('127.0.0.1');
-    final portInfo = await checkOpenPorts('127.0.0.1');
-    final result = FullScanResult(
-      target: '127.0.0.1',
-      osOutdated: info.osVersion == 'Unknown',
-      hasCve: info.cveMatches.isNotEmpty,
-      openPorts: portInfo,
-    );
+
+    NetworkScanResult networkResult;
+    try {
+      networkResult =
+          await scanNetwork().timeout(const Duration(seconds: 10));
+    } on TimeoutException {
+      networkResult =
+          NetworkScanResult(devices: const [], error: 'Network scan timed out');
+    }
+
+    final ips = <String>{};
+    ips.addAll(networkResult.devices.map((d) => d.ip));
+    if (ips.isEmpty) {
+      ips.add('127.0.0.1');
+    }
+
+    final results = <FullScanResult>[];
+    final errors = <String>{};
+
+    for (final ip in ips) {
+      final info = await deviceVersionScan(ip);
+      final portResult = await checkOpenPorts(ip: ip);
+      results.add(FullScanResult(
+        target: ip,
+        osOutdated: info.osVersion == 'Unknown',
+        hasCve: info.cveMatches.isNotEmpty,
+        openPorts: portResult.result,
+      ));
+      if (info.error != null) errors.add(info.error!);
+      if (portResult.error != null) errors.add(portResult.error!);
+    }
+
     if (!mounted) return;
     setState(() {
       _fullScanLoading = false;
-      _fullScanResults = [result];
+      _fullScanResults = results;
     });
+
+    if (networkResult.error != null) errors.add(networkResult.error!);
+    if (errors.isNotEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(errors.join('; '))));
+    }
   }
 
   Future<void> _startNetworkScan() async {
@@ -91,12 +123,16 @@ class _HomePageState extends State<HomePage>
       _networkScanLoading = true;
       _networkDevices = null;
     });
-    final devices = await scanNetwork();
+    final result = await scanNetwork();
     if (!mounted) return;
     setState(() {
       _networkScanLoading = false;
-      _networkDevices = devices;
+      _networkDevices = result.devices;
     });
+    if (result.error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(result.error!)));
+    }
   }
 
   @override

@@ -8,12 +8,14 @@ class DeviceVersionInfo {
   final String firmwareVersion;
   final List<String> softwareVersions;
   final List<String> cveMatches;
+  final String? error;
 
   DeviceVersionInfo({
     required this.osVersion,
     required this.firmwareVersion,
     required this.softwareVersions,
     required this.cveMatches,
+    this.error,
   });
 
   @override
@@ -33,8 +35,19 @@ class DeviceVersionInfo {
         buffer.writeln('  - $cve');
       }
     }
+    if (error != null) {
+      buffer.writeln('Error: $error');
+    }
     return buffer.toString().trim();
   }
+}
+
+/// Result of an open port scan.
+class PortScanResult {
+  final String result;
+  final String? error;
+
+  PortScanResult(this.result, [this.error]);
 }
 
 Future<String> scanDeviceVersion() async {
@@ -49,11 +62,21 @@ Future<String> scanDeviceVersion() async {
 /// function falls back to attempting socket connections to a small set of
 /// frequently used ports. The returned string lists the detected open ports or
 /// `No open ports` when none are found or the scan fails.
-Future<String> checkOpenPorts([String ip = '127.0.0.1']) async {
+Future<PortScanResult> checkOpenPorts({
+  String ip = '127.0.0.1',
+  Future<ProcessResult> Function(String, List<String>)? runProcess,
+  Future<Socket> Function(String, int, {Duration? timeout})? socketConnect,
+  List<int>? ports,
+}) async {
+  final openPorts = <int>[];
+  bool success = false;
+  String? error;
+
   try {
-    final result = await Process.run('nmap', ['-p', '1-1024', ip]);
+    final exec = runProcess ?? Process.run;
+    final result = await exec('nmap', ['-p', '1-1024', ip]);
     if (result.exitCode == 0) {
-      final openPorts = <int>[];
+      success = true;
       final lines = (result.stdout as String).split('\n');
       final regex = RegExp(r'^(\d+)/tcp\s+open');
       for (final line in lines) {
@@ -62,31 +85,40 @@ Future<String> checkOpenPorts([String ip = '127.0.0.1']) async {
           openPorts.add(int.parse(match.group(1)!));
         }
       }
-      if (openPorts.isNotEmpty) {
-        return 'Open ports: ${openPorts.join(', ')}';
-      }
-      return 'No open ports';
     }
-  } catch (_) {
+  } on ProcessException {
+    error = 'nmap command not found';
     // Ignore and fall back to socket based scanning
   }
 
-  const commonPorts = [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3389];
-  final open = <int>[];
-  for (final port in commonPorts) {
+  if (!success) {
+    final portList = ports ??
+        const [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 3389];
     try {
-      final socket = await Socket.connect(ip, port,
-          timeout: const Duration(milliseconds: 500));
-      socket.destroy();
-      open.add(port);
+      for (final port in portList) {
+        try {
+          final connect = socketConnect ?? Socket.connect;
+          final socket = await connect(ip, port,
+              timeout: const Duration(milliseconds: 500));
+          socket.destroy();
+          openPorts.add(port);
+          success = true;
+        } catch (_) {
+          // closed or unreachable
+        }
+      }
     } catch (_) {
-      // closed
+      // Socket scanning failed
     }
   }
-  if (open.isNotEmpty) {
-    return 'Open ports: ${open.join(', ')}';
+
+  if (!success) {
+    return PortScanResult('Scan failed', error);
   }
-  return 'No open ports';
+  if (openPorts.isNotEmpty) {
+    return PortScanResult('Open ports: ${openPorts.join(', ')}', error);
+  }
+  return PortScanResult('No open ports', error);
 }
 
 /// Scan a device at [ip] using `nmap` to gather version information.
@@ -134,12 +166,21 @@ Future<DeviceVersionInfo> deviceVersionScan(
       softwareVersions: softwareVersions,
       cveMatches: cveMatches,
     );
+  } on ProcessException {
+    return DeviceVersionInfo(
+      osVersion: 'Unknown',
+      firmwareVersion: 'Unknown',
+      softwareVersions: const [],
+      cveMatches: const [],
+      error: 'nmap command not found',
+    );
   } catch (_) {
     return DeviceVersionInfo(
       osVersion: 'Unknown',
       firmwareVersion: 'Unknown',
       softwareVersions: const [],
       cveMatches: const [],
+      error: 'Version scan failed',
     );
   }
 }

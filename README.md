@@ -18,6 +18,35 @@ flutter pub get
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for additional details.
 
+## Required command-line tools
+
+The app relies on several external utilities when available:
+
+- **nmap** for port and version scanning.
+- **ip**/ **ifconfig** and **arp** (or their Windows equivalents) for network discovery.
+
+If these tools are missing, the scanner falls back to limited functionality.
+
+### Installing the tools
+
+On Debian/Ubuntu:
+
+```bash
+sudo apt-get install nmap iproute2 net-tools
+```
+
+On macOS with Homebrew:
+
+```bash
+brew install nmap iproute2mac
+```
+
+On Windows (using Chocolatey):
+
+```powershell
+choco install nmap
+```
+
 ## Workflows
 
 ### Real-time scan
