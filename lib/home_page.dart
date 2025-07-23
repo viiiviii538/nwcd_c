@@ -5,6 +5,7 @@ import 'scanner.dart';
 import 'network_scanner.dart';
 import 'network_scan_isolate.dart';
 import 'network_diagram.dart';
+import 'topology_scanner.dart';
 
 class FullScanResult {
   final String target;
@@ -22,8 +23,9 @@ class FullScanResult {
 
 class HomePage extends StatefulWidget {
   final Future<List<NetworkDevice>> Function()? scanNetworkFn;
+  final Future<List<TopologyLink>> Function()? scanTopologyFn;
 
-  const HomePage({super.key, this.scanNetworkFn});
+  const HomePage({super.key, this.scanNetworkFn, this.scanTopologyFn});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -37,6 +39,8 @@ class _HomePageState extends State<HomePage>
   List<FullScanResult>? _fullScanResults;
   bool _networkScanLoading = false;
   List<NetworkDevice>? _networkDevices;
+  bool _topologyLoading = false;
+  List<TopologyLink>? _topology;
   final List<String> _realtimeLogs = [];
   Timer? _realtimeTimer;
 
@@ -95,9 +99,12 @@ class _HomePageState extends State<HomePage>
     setState(() {
       _networkScanLoading = true;
       _networkDevices = null;
+      _topologyLoading = true;
+      _topology = null;
     });
 
     final customScan = widget.scanNetworkFn;
+    final customTopo = widget.scanTopologyFn;
     if (customScan != null) {
       final devices = await customScan();
       if (!mounted) return;
@@ -105,16 +112,31 @@ class _HomePageState extends State<HomePage>
         _networkScanLoading = false;
         _networkDevices = devices;
       });
+      final topo =
+          customTopo != null ? await customTopo() : await scanTopology();
+      if (!mounted) return;
+      setState(() {
+        _topologyLoading = false;
+        _topology = topo;
+      });
       return;
     }
 
     final port = ReceivePort();
-    port.listen((message) {
+    port.listen((message) async {
       if (message is List<NetworkDevice> && mounted) {
         setState(() {
           _networkScanLoading = false;
           _networkDevices = message;
         });
+        final topo =
+            customTopo != null ? await customTopo() : await scanTopology();
+        if (mounted) {
+          setState(() {
+            _topologyLoading = false;
+            _topology = topo;
+          });
+        }
         port.close();
       }
     });
@@ -212,7 +234,7 @@ class _HomePageState extends State<HomePage>
 
   Widget _buildNetworkDiagramTab() {
     final devices = _networkDevices;
-    final isLoading = _networkScanLoading;
+    final isLoading = _networkScanLoading || _topologyLoading;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -225,7 +247,10 @@ class _HomePageState extends State<HomePage>
           if (isLoading) const CircularProgressIndicator(),
           if (!isLoading && devices != null)
             Expanded(
-              child: NetworkDiagram(devices: devices),
+              child: NetworkDiagram(
+                devices: devices,
+                topology: _topology ?? const [],
+              ),
             ),
         ],
       ),
