@@ -105,22 +105,6 @@ class _HomePageState extends State<HomePage>
 
     final customScan = widget.scanNetworkFn;
     final customTopo = widget.scanTopologyFn;
-    if (customScan != null) {
-      final devices = await customScan();
-      if (!mounted) return;
-      setState(() {
-        _networkScanLoading = false;
-        _networkDevices = devices;
-      });
-      final topo =
-          customTopo != null ? await customTopo() : await scanTopology();
-      if (!mounted) return;
-      setState(() {
-        _topologyLoading = false;
-        _topology = topo;
-      });
-      return;
-    }
 
     final port = ReceivePort();
     port.listen((message) async {
@@ -149,7 +133,12 @@ class _HomePageState extends State<HomePage>
         port.close();
       }
     });
-    await Isolate.spawn(networkScanIsolate, port.sendPort);
+
+    if (customScan != null) {
+      await Isolate.spawn(networkScanIsolate, [port.sendPort, customScan]);
+    } else {
+      await Isolate.spawn(networkScanIsolate, port.sendPort);
+    }
   }
 
   @override
