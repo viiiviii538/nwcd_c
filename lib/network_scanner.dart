@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:math';
-import 'package:meta/meta.dart';
 
 class NetworkDevice {
   final String ip;
@@ -99,57 +97,24 @@ List<NetworkDevice> _parseNmapOutput(String output) {
   return devices;
 }
 
-Future<List<NetworkDevice>> _pingSweep(
-  String subnet, {
-  Future<void> Function(String ip)? pingAddress,
-  Future<List<NetworkDevice>> Function()? readArpTable,
-  int maxHosts = 1024,
-}) async {
+Future<List<NetworkDevice>> _pingSweep(String subnet) async {
   final parts = subnet.split('/');
   if (parts.length != 2) return [];
   final baseIp = parts[0];
   final prefix = int.tryParse(parts[1]) ?? 24;
   final start = _ipToInt(calculateNetwork(baseIp, prefix));
   final count = 1 << (32 - prefix);
-  final hostCount = count - 2;
-  if (hostCount <= 0) return [];
-
-  final toScan = hostCount > maxHosts ? maxHosts : hostCount;
-  if (hostCount > maxHosts) {
-    stderr.writeln(
-        'Subnet $subnet has $hostCount hosts, scanning first $maxHosts only');
+  final tasks = <Future<void>>[];
+  for (var i = 1; i < count - 1; i++) {
+    tasks.add(_pingAddress(_intToIp(start + i)));
   }
-
-  final ping = pingAddress ?? _pingAddress;
-  const batchSize = 20;
-  for (var i = 1; i <= toScan; i += batchSize) {
-    final end = min(toScan, i + batchSize - 1);
-    final tasks = <Future<void>>[];
-    for (var j = i; j <= end; j++) {
-      tasks.add(ping(_intToIp(start + j)));
-    }
-    await Future.wait(tasks);
-  }
-  final arpEntries = await (readArpTable ?? _readArpTable)();
+  await Future.wait(tasks);
+  final arpEntries = await _readArpTable();
   return arpEntries.where((e) {
     final ipInt = _ipToInt(e.ip);
     return ipInt >= start && ipInt < start + count;
   }).toList();
 }
-
-@visibleForTesting
-Future<List<NetworkDevice>> pingSweepForTest(
-  String subnet, {
-  Future<void> Function(String ip)? pingAddress,
-  Future<List<NetworkDevice>> Function()? readArpTable,
-  int maxHosts = 1024,
-}) =>
-    _pingSweep(
-      subnet,
-      pingAddress: pingAddress,
-      readArpTable: readArpTable,
-      maxHosts: maxHosts,
-    );
 
 Future<void> _pingAddress(String ip) async {
   try {
