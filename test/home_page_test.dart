@@ -45,5 +45,12 @@ void main() {
     expect(find.text('日本'), findsOneWidget);
     expect(find.text('134'), findsOneWidget);
     expect(find.byType(charts.PieChart), findsOneWidget);
+    expect(find.text('危険な通信デモ'), findsOneWidget);
+    expect(find.text('宛先ホスト名/IP'), findsOneWidget);
+    expect(find.text('通信種別'), findsOneWidget);
+    expect(find.text('暗号化状態'), findsOneWidget);
+    expect(find.text('test.example.com'), findsOneWidget);
+    expect(find.text('HTTP'), findsOneWidget);
+    expect(find.text('TELNET'), findsOneWidget);
   });
 }
