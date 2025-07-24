@@ -67,6 +67,14 @@ choco install nmap
 ### リスクまとめ
 1. Tap **リスクまとめ** on the home screen.
 2. A single page lists common network security risks for quick reference.
+   - 無許可のネットワークスキャンは違法となる可能性があります。
+   - 不要な開放ポートは攻撃の入口となります。
+   - OSやソフトウェアの未更新は既知の脆弱性(CVE)悪用に繋がります。
+   - デバイス/ソフトウェアのバージョンを把握し、脆弱性情報と照合することが重要です。
+   - デフォルト/弱いパスワードの利用
+   - 安全でないプロトコル (HTTP/Telnet) の使用
+   - 管理インターフェースの外部公開
+   - ネットワーク分割や監視体制の不足
 
 **Note:** Only run network scans against systems you are authorized to test.
 Unauthorized scanning can be illegal or violate terms of service.
