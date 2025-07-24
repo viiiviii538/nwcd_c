@@ -17,6 +17,9 @@ Flutter, fetch dependencies with:
 flutter pub get
 ```
 
+The project depends on the `charts_flutter` package for displaying charts in
+the risk summary demo.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for additional details.
 
 ## Required command-line tools
@@ -66,7 +69,9 @@ choco install nmap
 
 ### リスクまとめ
 1. Tap **リスクまとめ** on the home screen.
-2. A single page lists common network security risks for quick reference.
+2. A single page lists common network security risks for quick reference and
+   includes a demo table and pie chart summarizing recent connections by
+   destination country.
    - 無許可のネットワークスキャンは違法となる可能性があります。
    - 不要な開放ポートは攻撃の入口となります。
    - OSやソフトウェアの未更新は既知の脆弱性(CVE)悪用に繋がります。
