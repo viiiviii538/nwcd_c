@@ -36,5 +36,9 @@ void main() {
 
     expect(find.text('リスク要約'), findsOneWidget);
     expect(find.textContaining('ネットワークスキャン'), findsOneWidget);
+    expect(find.textContaining('デフォルト/弱いパスワード'), findsOneWidget);
+    expect(find.textContaining('安全でないプロトコル'), findsOneWidget);
+    expect(find.textContaining('管理インターフェースの外部公開'), findsOneWidget);
+    expect(find.textContaining('ネットワーク分割や監視体制の不足'), findsOneWidget);
   });
 }
