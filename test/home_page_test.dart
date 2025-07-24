@@ -40,5 +40,12 @@ void main() {
     expect(find.textContaining('安全でないプロトコル'), findsOneWidget);
     expect(find.textContaining('管理インターフェースの外部公開'), findsOneWidget);
     expect(find.textContaining('ネットワーク分割や監視体制の不足'), findsOneWidget);
+    expect(find.text('危険な通信デモ'), findsOneWidget);
+    expect(find.text('宛先ホスト名/IP'), findsOneWidget);
+    expect(find.text('通信種別'), findsOneWidget);
+    expect(find.text('暗号化状態'), findsOneWidget);
+    expect(find.text('test.example.com'), findsOneWidget);
+    expect(find.text('HTTP'), findsOneWidget);
+    expect(find.text('TELNET'), findsOneWidget);
   });
 }
