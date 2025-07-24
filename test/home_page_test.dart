@@ -36,5 +36,6 @@ void main() {
 
     expect(find.text('リスク要約'), findsOneWidget);
     expect(find.textContaining('ネットワークスキャン'), findsOneWidget);
+    expect(find.textContaining('192.168.1.10'), findsOneWidget);
   });
 }

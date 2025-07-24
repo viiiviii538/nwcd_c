@@ -23,6 +23,20 @@ class RiskSummaryPage extends StatelessWidget {
           Text('$bullet OSやソフトウェアの未更新は既知の脆弱性(CVE)悪用に繋がります。'),
           const SizedBox(height: 8),
           Text('$bullet デバイス/ソフトウェアのバージョンを把握し、脆弱性情報と照合することが重要です。'),
+          const SizedBox(height: 8),
+          Text('$bullet 以下は無許可スキャンで得られる可能性のある情報例です:'),
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.black12,
+              border: Border.all(color: Colors.grey),
+            ),
+            child: const Text(
+              '192.168.1.10:22/tcp open ssh\n192.168.1.10:80/tcp open http',
+              style: TextStyle(fontFamily: 'monospace'),
+            ),
+          ),
         ],
       ),
     );

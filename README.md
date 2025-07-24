@@ -67,6 +67,8 @@ choco install nmap
 ### リスクまとめ
 1. Tap **リスクまとめ** on the home screen.
 2. A single page lists common network security risks for quick reference.
+   The page also includes a short example of data an unauthorized scan might
+   reveal.
 
 **Note:** Only run network scans against systems you are authorized to test.
 Unauthorized scanning can be illegal or violate terms of service.
