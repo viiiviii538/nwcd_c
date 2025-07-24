@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:nwcd_c/scanner.dart';
 import 'package:nwcd_c/network_scanner.dart';
+import 'package:nwcd_c/risk_summary_page.dart';
 
 class FullScanResult {
   final String target;
@@ -38,7 +39,7 @@ class _HomePageState extends State<HomePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   void _startRealTimeScan() {
@@ -146,6 +147,7 @@ class _HomePageState extends State<HomePage>
             Tab(text: 'リアルタイム診断'),
             Tab(text: 'フルスキャン'),
             Tab(text: 'ネットワーク図'),
+            Tab(text: 'リスクまとめ'),
           ],
         ),
       ),
@@ -155,6 +157,7 @@ class _HomePageState extends State<HomePage>
           _buildRealtimeTab(),
           _buildFullScanTab(),
           _buildNetworkDiagramTab(),
+          const RiskSummaryPage(),
         ],
       ),
     );

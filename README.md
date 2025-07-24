@@ -1,8 +1,9 @@
 # nwcd_c
 
-This Flutter project contains a minimal home screen with three tabs:
+This Flutter project contains a minimal home screen with four tabs:
 **リアルタイム診断** for a quick real-time scan, **フルスキャン** for a full
-network scan, and **ネットワーク図** for displaying a network diagram.
+network scan, **ネットワーク図** for displaying a network diagram, and
+**リスクまとめ** for a brief overview of common security risks.
 Pressing either scan button shows a short progress indicator. Once the
 actual scanning logic is implemented, each workflow will navigate to a results
 page summarizing the findings.
@@ -62,6 +63,10 @@ choco install nmap
 ### Network diagram
 1. Tap **ネットワーク図** on the home screen.
 2. A placeholder diagram is displayed showing where network visuals will appear.
+
+### リスクまとめ
+1. Tap **リスクまとめ** on the home screen.
+2. A single page lists common network security risks for quick reference.
 
 **Note:** Only run network scans against systems you are authorized to test.
 Unauthorized scanning can be illegal or violate terms of service.

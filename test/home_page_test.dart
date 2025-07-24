@@ -27,4 +27,14 @@ void main() {
     expect(find.textContaining('.'), findsWidgets);
     expect(find.text('フルスキャン開始'), findsOneWidget);
   });
+
+  testWidgets('Risk summary tab displays text', (WidgetTester tester) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tester.tap(find.widgetWithText(Tab, 'リスクまとめ'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('リスク要約'), findsOneWidget);
+    expect(find.textContaining('ネットワークスキャン'), findsOneWidget);
+  });
 }
