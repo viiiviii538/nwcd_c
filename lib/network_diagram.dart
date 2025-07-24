@@ -35,11 +35,18 @@ class NetworkDiagram extends StatelessWidget {
       return nodes.putIfAbsent(id, () => Node.Id(id));
     }
 
+    String? emptyMessage;
+
     if (topology.isEmpty) {
       final root = getNode('Local');
-      for (final d in devices) {
-        final label = d.name.isNotEmpty ? d.name : d.ip;
-        graph.addEdge(root, getNode(label));
+      if (devices.isEmpty) {
+        graph.addNode(root);
+        emptyMessage = 'No devices found';
+      } else {
+        for (final d in devices) {
+          final label = d.name.isNotEmpty ? d.name : d.ip;
+          graph.addEdge(root, getNode(label));
+        }
       }
     } else {
       for (final link in topology) {
@@ -71,12 +78,31 @@ class NetworkDiagram extends StatelessWidget {
       graphWidget = SizedBox(width: width, height: height, child: graphWidget);
     }
 
-    return InteractiveViewer(
+    Widget viewer = InteractiveViewer(
       constrained: false,
       boundaryMargin: const EdgeInsets.all(20),
       minScale: 0.01,
       maxScale: 5,
       child: graphWidget,
     );
+
+    if (emptyMessage != null) {
+      viewer = Stack(
+        alignment: Alignment.center,
+        children: [
+          viewer,
+          Positioned(
+            bottom: 16,
+            child: Container(
+              color: Colors.white70,
+              padding: const EdgeInsets.all(8),
+              child: Text(emptyMessage!),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return viewer;
   }
 }
