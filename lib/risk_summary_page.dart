@@ -160,6 +160,32 @@ class RiskSummaryPage extends StatelessWidget {
               ]),
             ],
           ),
+          const SizedBox(height: 24),
+          Text(
+            '⚠️ 異常検出',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '同じIPに異なるMACアドレスが複数存在します。\n通信なりすまし（ARPスプーフィング）のリスクがあります。',
+          ),
+          const SizedBox(height: 8),
+          DataTable(
+            columns: const [
+              DataColumn(label: Text('IPアドレス')),
+              DataColumn(label: Text('MACアドレス')),
+            ],
+            rows: const [
+              DataRow(cells: [
+                DataCell(Text('192.168.0.15')),
+                DataCell(Text('AA:BB:CC:DD:EE:01')),
+              ]),
+              DataRow(cells: [
+                DataCell(Text('192.168.0.15')),
+                DataCell(Text('AA:BB:CC:DD:EE:99')),
+              ]),
+            ],
+          ),
         ],
       ),
     );
