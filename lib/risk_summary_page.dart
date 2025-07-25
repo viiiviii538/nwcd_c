@@ -186,6 +186,32 @@ class RiskSummaryPage extends StatelessWidget {
               ]),
             ],
           ),
+          const SizedBox(height: 24),
+          Text(
+            'ルーターが複数稼働（DHCP重複検出）',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '検出結果：DHCPサーバが複数存在しています（想定外のルーター稼働中）',
+          ),
+          const SizedBox(height: 8),
+          DataTable(
+            columns: const [
+              DataColumn(label: Text('IPアドレス')),
+              DataColumn(label: Text('機器種別')),
+            ],
+            rows: const [
+              DataRow(cells: [
+                DataCell(Text('192.168.0.1')),
+                DataCell(Text('メインルーター')),
+              ]),
+              DataRow(cells: [
+                DataCell(Text('192.168.0.254')),
+                DataCell(Text('未知の家庭用ルーター')),
+              ]),
+            ],
+          ),
         ],
       ),
     );
