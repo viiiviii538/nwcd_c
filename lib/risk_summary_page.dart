@@ -104,6 +104,36 @@ class RiskSummaryPage extends StatelessWidget {
               style: TextStyle(fontFamily: 'monospace'),
             ),
           ),
+          const SizedBox(height: 24),
+          Text(
+            '通信量が異常な機器',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          DataTable(
+            columns: const [
+              DataColumn(label: Text('IPアドレス')),
+              DataColumn(label: Text('デバイス名')),
+              DataColumn(label: Text('通信量（MB/分）')),
+            ],
+            rows: const [
+              DataRow(cells: [
+                DataCell(Text('192.168.0.12')),
+                DataCell(Text('PC-A')),
+                DataCell(Text('327')),
+              ]),
+              DataRow(cells: [
+                DataCell(Text('192.168.0.21')),
+                DataCell(Text('NAS-Server')),
+                DataCell(Text('215')),
+              ]),
+              DataRow(cells: [
+                DataCell(Text('192.168.0.3')),
+                DataCell(Text('不明な機器')),
+                DataCell(Text('200')),
+              ]),
+            ],
+          ),
         ],
       ),
     );
