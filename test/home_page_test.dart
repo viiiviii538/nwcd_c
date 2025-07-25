@@ -52,5 +52,11 @@ void main() {
     expect(find.text('test.example.com'), findsOneWidget);
     expect(find.text('HTTP'), findsOneWidget);
     expect(find.text('TELNET'), findsOneWidget);
+    expect(find.text('通信量が異常な機器'), findsOneWidget);
+    expect(find.text('IPアドレス'), findsOneWidget);
+    expect(find.text('デバイス名'), findsOneWidget);
+    expect(find.text('通信量（MB/分）'), findsOneWidget);
+    expect(find.text('192.168.0.12'), findsOneWidget);
+    expect(find.text('PC-A'), findsOneWidget);
   });
 }

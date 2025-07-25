@@ -11,7 +11,9 @@ void main() {
     expect(find.text('通信先の国 一覧表示'), findsOneWidget);
     expect(find.byType(DataTable), findsOneWidget);
     expect(find.text('日本'), findsOneWidget);
-    expect(find.text('134'), findsOneWidget);
-    expect(find.byType(charts.PieChart), findsOneWidget);
+  expect(find.text('134'), findsOneWidget);
+  expect(find.byType(charts.PieChart), findsOneWidget);
+  expect(find.text('通信量が異常な機器'), findsOneWidget);
+  expect(find.text('192.168.0.12'), findsOneWidget);
   });
 }
