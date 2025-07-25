@@ -107,6 +107,31 @@ class RiskSummaryPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
+            '危険なポートが開いている機器',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          DataTable(
+            columns: const [
+              DataColumn(label: Text('IPアドレス')),
+              DataColumn(label: Text('機器名')),
+              DataColumn(label: Text('開いている危険ポート')),
+            ],
+            rows: const [
+              DataRow(cells: [
+                DataCell(Text('192.168.0.12')),
+                DataCell(Text('PC-A')),
+                DataCell(Text('3389, 445')),
+              ]),
+              DataRow(cells: [
+                DataCell(Text('192.168.0.34')),
+                DataCell(Text('古いNAS装置')),
+                DataCell(Text('23（TELNET）')),
+              ]),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text(
             '通信量が異常な機器',
             style: Theme.of(context).textTheme.titleMedium,
           ),

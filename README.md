@@ -80,6 +80,7 @@ choco install nmap
    - 安全でないプロトコル (HTTP/Telnet) の使用
    - 管理インターフェースの外部公開
    - ネットワーク分割や監視体制の不足
+   - 危険なポートが開いている機器のリスト表示
    - 通信量が異常な機器のランキング表示
 
 **Note:** Only run network scans against systems you are authorized to test.
