@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nwcd_c/main.dart';
+import 'package:charts_flutter/flutter.dart' as charts;
 
 void main() {
   testWidgets('Full scan shows table results', (WidgetTester tester) async {
@@ -40,6 +41,10 @@ void main() {
     expect(find.textContaining('安全でないプロトコル'), findsOneWidget);
     expect(find.textContaining('管理インターフェースの外部公開'), findsOneWidget);
     expect(find.textContaining('ネットワーク分割や監視体制の不足'), findsOneWidget);
+    expect(find.byType(DataTable), findsOneWidget);
+    expect(find.text('日本'), findsOneWidget);
+    expect(find.text('134'), findsOneWidget);
+    expect(find.byType(charts.PieChart), findsOneWidget);
     expect(find.text('危険な通信デモ'), findsOneWidget);
     expect(find.text('宛先ホスト名/IP'), findsOneWidget);
     expect(find.text('通信種別'), findsOneWidget);
