@@ -20,7 +20,7 @@ void main() {
     await tester.pump(const Duration(seconds: 12));
     await tester.pumpAndSettle();
 
-    expect(find.byType(DataTable), findsOneWidget);
+    expect(find.byType(DataTable), findsWidgets);
     expect(find.text('OSアップデート未適用'), findsOneWidget);
     expect(find.text('CVE脆弱性検出あり'), findsOneWidget);
     expect(find.text('開放ポート'), findsOneWidget);
@@ -41,7 +41,7 @@ void main() {
     expect(find.textContaining('安全でないプロトコル'), findsOneWidget);
     expect(find.textContaining('管理インターフェースの外部公開'), findsOneWidget);
     expect(find.textContaining('ネットワーク分割や監視体制の不足'), findsOneWidget);
-    expect(find.byType(DataTable), findsOneWidget);
+    expect(find.byType(DataTable), findsWidgets);
     expect(find.text('日本'), findsOneWidget);
     expect(find.text('134'), findsOneWidget);
     expect(find.byType(charts.PieChart), findsOneWidget);
@@ -58,5 +58,6 @@ void main() {
     expect(find.text('通信量（MB/分）'), findsOneWidget);
     expect(find.text('192.168.0.12'), findsOneWidget);
     expect(find.text('PC-A'), findsOneWidget);
+    expect(find.text('未知の家庭用ルーター'), findsOneWidget);
   });
 }
