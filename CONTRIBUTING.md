@@ -9,8 +9,11 @@ Thank you for considering contributing to **nwcd_c**!
 2. Clone this repository and fetch dependencies:
 
    ```bash
-   flutter pub get
-   ```
+flutter pub get
+```
+
+3. Whenever you change **pubspec.yaml**, run `flutter pub get` again so all
+   packages are up to date.
 
 ## Running tests
 

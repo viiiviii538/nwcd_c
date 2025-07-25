@@ -17,6 +17,9 @@ Flutter, fetch dependencies with:
 flutter pub get
 ```
 
+Whenever you modify **pubspec.yaml**, run `flutter pub get` again so the
+`pubspec.lock` file and your local packages stay in sync.
+
 The project depends on the `charts_flutter` package for displaying charts in
 the risk summary demo.
 
