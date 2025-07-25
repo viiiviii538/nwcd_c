@@ -17,7 +17,7 @@ Flutter, fetch dependencies with:
 flutter pub get
 ```
 
-The project depends on the `charts_flutter` package for displaying charts in
+The project depends on the `community_charts_flutter` package for displaying charts in
 the risk summary demo.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for additional details.

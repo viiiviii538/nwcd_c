@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nwcd_c/main.dart';
-import 'package:charts_flutter/flutter.dart' as charts;
+import 'package:community_charts_flutter/community_charts_flutter.dart' as charts;
 
 void main() {
   testWidgets('Full scan shows table results', (WidgetTester tester) async {
