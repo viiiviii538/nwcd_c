@@ -17,12 +17,9 @@ Flutter, fetch dependencies with:
 flutter pub get
 ```
 
-The project depends on the `community_charts_flutter` package for displaying charts in
+To display the risk summary charts, the project uses the `community_charts_flutter` package.
 Whenever you modify **pubspec.yaml**, run `flutter pub get` again so the
 `pubspec.lock` file and your local packages stay in sync.
-
-The project depends on the `charts_flutter` package for displaying charts in
-the risk summary demo.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for additional details.
 
