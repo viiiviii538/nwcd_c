@@ -70,6 +70,7 @@ class RiskSummaryPage extends StatelessWidget {
                   ]),
                 )
                 .toList(),
+          ),
           const SizedBox(height: 24),
           Text(
             '危険な通信デモ',
