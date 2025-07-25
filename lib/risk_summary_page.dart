@@ -43,7 +43,7 @@ class RiskSummaryPage extends StatelessWidget {
           ),
           
           const SizedBox(height: 32),
-          Text('通信先の国 一覧表示',
+          Text('$bullet 通信先の国 一覧表示',
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 16),
           SizedBox(
