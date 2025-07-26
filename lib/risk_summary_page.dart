@@ -42,6 +42,21 @@ class RiskSummaryPage extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
 
+          const SizedBox(height: 16),
+          Text('$bullet 無許可のネットワークスキャンは違法となる可能性があります。'),
+          Text('$bullet 不要な開放ポートは攻撃の入口となります。'),
+          Text(
+            '$bullet OSやソフトウェアの未更新は既知の脆弱性(CVE)悪用に繋がります。',
+          ),
+          Text(
+            '$bullet デバイス/ソフトウェアのバージョンを把握し、脆弱性情報と照合することが重要です。',
+          ),
+          Text('$bullet デフォルト/弱いパスワードの利用'),
+          Text('$bullet 安全でないプロトコル (HTTP/Telnet) の使用'),
+          Text('$bullet 管理インターフェースの外部公開'),
+          Text('$bullet ネットワーク分割や監視体制の不足'),
+          Text('$bullet 危険なポートが開いている機器のリスト表示'),
+          Text('$bullet 通信量が異常な機器のランキング表示'),
           const SizedBox(height: 32),
           Text('$bullet 通信先の国 一覧表示',
               style: Theme.of(context).textTheme.titleMedium),
