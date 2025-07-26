@@ -201,8 +201,10 @@ class _HomePageState extends State<HomePage>
           if (!isLoading && results != null)
             Expanded(
               child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: DataTable(
+                scrollDirection: Axis.horizontal,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: DataTable(
                   columns: const [
                     DataColumn(label: Text('IP/デバイス')),
                     DataColumn(label: Text('OSアップデート未適用')),
@@ -219,6 +221,7 @@ class _HomePageState extends State<HomePage>
                         ]),
                       )
                       .toList(),
+                  ),
                 ),
               ),
             ),
@@ -243,8 +246,10 @@ class _HomePageState extends State<HomePage>
           if (!isLoading && devices != null)
             Expanded(
               child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: DataTable(
+                scrollDirection: Axis.horizontal,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: DataTable(
                   columns: const [
                     DataColumn(label: Text('IPアドレス')),
                     DataColumn(label: Text('MACアドレス')),
@@ -261,6 +266,7 @@ class _HomePageState extends State<HomePage>
                         ]),
                       )
                       .toList(),
+                  ),
                 ),
               ),
             ),
