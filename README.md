@@ -1,7 +1,7 @@
 # nwcd_c
 
 This Flutter project contains a minimal home screen with four tabs:
-**リアルタイム診断** for a quick real-time scan, **フルスキャン** for a full
+**リアルタイム診断** for a quick real-time scan, **フルスキャン診断** for a full
 network scan, **ネットワーク図** for displaying a network diagram, and
 **リスクまとめ** for a brief overview of common security risks.
 Pressing either scan button shows a short progress indicator. Once the
@@ -60,7 +60,7 @@ choco install nmap
 3. When finished, it navigates to the results page.
 
 ### Full scan
-1. Tap **フルスキャン** on the home screen.
+1. Tap **フルスキャン診断** on the home screen.
 2. A more thorough scan is executed and a progress indicator is shown.
 3. After completion, the app navigates to the results page.
 
