@@ -8,7 +8,7 @@ void main() {
     await tester.pumpWidget(const MyApp());
 
     // Navigate to full scan tab
-    await tester.tap(find.widgetWithText(Tab, 'フルスキャン'));
+    await tester.tap(find.widgetWithText(Tab, 'フルスキャン診断'));
     await tester.pumpAndSettle();
 
     // Start full scan and expect progress indicator

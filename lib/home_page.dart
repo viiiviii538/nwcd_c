@@ -145,7 +145,7 @@ class _HomePageState extends State<HomePage>
           controller: _tabController,
           tabs: const [
             Tab(text: 'リアルタイム診断'),
-            Tab(text: 'フルスキャン'),
+            Tab(text: 'フルスキャン診断'),
             Tab(text: 'ネットワーク図'),
             Tab(text: 'リスクまとめ'),
           ],
